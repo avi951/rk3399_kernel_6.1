@@ -8,6 +8,7 @@
 #define BOARDINFO_NAME "vaaman-boardinfo"
 #define BOARDINFO_PROC_MODE 0644
 #define SECRET_SIZE 16
+#include "../../include/crypto/akcipher.h"
 
 char secret[SECRET_SIZE] = {
 	0x76, 0x69, 0x63, 0x68, 0x61, 0x72, 0x61, 0x6b,
@@ -25,12 +26,14 @@ struct boardinfo_data {
 	int blocks;
 	int board_id[BOARDINFO_ID_MAX_LEN];
 	int hw_id[BOARDINFO_HWID_MAX_LEN];
-	struct crypto_cipher *tfm;
 	struct device *dev;
 	struct proc_dir_entry *proc_file;
 #ifdef CONFIG_BOARDINFO_DECRYPT
 	struct proc_dir_entry *proc_file;
 #endif
+	struct akcipher_request *req;
+	struct akcipher_alg *akcipher;
+	struct crypto_akcipher *tfm;
 };
 
 static struct boardinfo_data *boardinfo;
