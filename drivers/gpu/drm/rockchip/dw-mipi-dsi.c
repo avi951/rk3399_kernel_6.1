@@ -1550,13 +1550,41 @@ static int dw_mipi_dsi_dual_channel_probe(struct dw_mipi_dsi *dsi)
 	return 0;
 }
 
-static int dw_mipi_dsi_register(struct drm_device *drm,
-				      struct dw_mipi_dsi *dsi)
+#if defined(CONFIG_TINKER_MCU)
+extern int tinker_mcu_is_connected(int dsi_id);
+extern int tinker_mcu_ili9881c_is_connected(int dsi_id);
+#endif
+
+static int dw_mipi_dsi_bind(struct device *dev, struct device *master,
+			    void *data)
 {
 	struct drm_encoder *encoder = &dsi->encoder;
 	struct drm_connector *connector = &dsi->connector;
 	struct device *dev = dsi->dev;
 	int ret;
+
+#if defined(CONFIG_TINKER_MCU)
+	if(!tinker_mcu_is_connected(dsi->id) && !tinker_mcu_ili9881c_is_connected(dsi->id)) {
+		pr_info("dsi-%d panel isn't connected\n", dsi->id);
+		return 0;
+	} else {
+		pr_info("dsi-%d panel is connected\n", dsi->id);
+	}
+#endif
+
+	ret = dw_mipi_dsi_dual_channel_probe(dsi);
+	if (ret)
+		return ret;
+
+	if (dsi->master)
+		return 0;
+
+	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, -1,
+					  &dsi->panel, &dsi->bridge);
+	if (ret) {
+		DRM_DEV_ERROR(dev, "Failed to find panel or bridge: %d\n", ret);
+		return ret;
+	}
 
 	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm,
 							     dev->of_node);
