@@ -3552,7 +3552,26 @@ static struct spi_mem_driver spi_nor_driver = {
 	.remove = spi_nor_remove,
 	.shutdown = spi_nor_shutdown,
 };
-module_spi_mem_driver(spi_nor_driver);
+
+
+/**
+ * PCA9570 driver was unable to detect SPI chip (w25q128).
+ * because SPI nor was initialiting earlier
+ * Therefore, lateincall spi nor to satisfy IO-Expander
+ */
+static int __init spi_nor_init_drv(void)
+{
+	return spi_mem_driver_register(&spi_nor_driver);
+}
+
+late_initcall(spi_nor_init_drv);
+
+static void __exit spi_nor_exit_drv(void)
+{
+	spi_mem_driver_unregister(&spi_nor_driver);
+}
+
+module_exit(spi_nor_exit_drv);
 
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR("Huang Shijie <shijie8@gmail.com>");
