@@ -5,7 +5,7 @@
  * Author: Jianwei Fan <jianwei.fan@rock-chips.com>
  *
  */
-
+#include <drm/drm_crtc.h>
 #ifndef __LT7911D_H
 #define __LT7911D_H
 
@@ -50,3 +50,5 @@
 #define DISABLE_STREAM		0xbe
 
 #endif /* __LT7911D_H */
+
+struct drm_bridge * return_bridge(struct platform_device * pdev);

@@ -7,8 +7,8 @@ scripts/kconfig/conf  --silentoldconfig Kconfig
   Using .. as source for kernel
   CHK     include/generated/utsrelease.h
   CHK     scripts/mod/devicetable-offsets.h
-  CHK     include/generated/timeconst.h
 grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
+  CHK     include/generated/timeconst.h
   CHK     include/generated/bounds.h
   CHK     include/generated/asm-offsets.h
   CALL    ../scripts/checksyscalls.sh
@@ -18,8 +18,23 @@ make[2]: 'include/generated/vdso-offsets.h' is up to date.
   GZIP    kernel/config_data.gz
   CHK     kernel/config_data.h
 grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
-  CC      drivers/gpu/drm/drm_of.o
-  LD      drivers/gpu/drm/drm.o
+  CC      drivers/gpu/drm/rockchip/lt7911d.o
+../drivers/gpu/drm/rockchip/lt7911d.c: In function ‘lt7911d_init’:
+../drivers/gpu/drm/rockchip/lt7911d.c:60:15: warning: unused variable ‘version’ [-Wunused-variable]
+   60 |  unsigned int version[2];
+      |               ^~~~~~~
+../drivers/gpu/drm/rockchip/lt7911d.c:57:5: warning: unused variable ‘lanes’ [-Wunused-variable]
+   57 |  u8 lanes = 4;
+      |     ^~~~~
+../drivers/gpu/drm/rockchip/lt7911d.c: In function ‘lt7911d_probe’:
+../drivers/gpu/drm/rockchip/lt7911d.c:412:22: warning: unused variable ‘adapter’ [-Wunused-variable]
+  412 |  struct i2c_adapter *adapter;
+      |                      ^~~~~~~
+At top level:
+../drivers/gpu/drm/rockchip/lt7911d.c:373:12: warning: ‘lt7911d_i2c_init’ defined but not used [-Wunused-function]
+  373 | static int lt7911d_i2c_init(struct lt7911d *lt7911d,
+      |            ^~~~~~~~~~~~~~~~
+  LD      drivers/gpu/drm/rockchip/built-in.o
   LD      drivers/gpu/drm/built-in.o
   LD      drivers/gpu/built-in.o
   LD      drivers/built-in.o

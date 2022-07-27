@@ -1474,8 +1474,10 @@ struct i2c_adapter *of_find_i2c_adapter_by_node(struct device_node *node)
 	struct i2c_adapter *adapter;
 
 	dev = bus_find_device(&i2c_bus_type, NULL, node, of_dev_node_match);
-	if (!dev)
+	if (!dev) {
+		dev_info(dev, "No i2c device found for device\n");
 		return NULL;
+	}
 
 	adapter = i2c_verify_adapter(dev);
 	if (!adapter)

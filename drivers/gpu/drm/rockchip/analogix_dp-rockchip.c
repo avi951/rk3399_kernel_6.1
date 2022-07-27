@@ -32,6 +32,7 @@
 #include <video/videomode.h>
 
 #include <drm/bridge/analogix_dp.h>
+#include "lt7911d.h"
 
 #include "rockchip_drm_drv.h"
 #include "rockchip_drm_vop.h"
@@ -313,7 +314,7 @@ static int rockchip_dp_init(struct rockchip_dp_device *dp)
 		}
 
 		dp->vccio_supply = NULL;
-	}
+		}
 
 	return 0;
 }
@@ -348,6 +349,7 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
 	struct rockchip_dp_device *dp = dev_get_drvdata(dev);
 	const struct rockchip_dp_chip_data *dp_data;
 	struct drm_panel *panel = NULL;
+	// struct drm_bridge *bridge = return_bridge(dev);
 	struct drm_bridge *bridge = NULL;
 	struct drm_device *drm_dev = data;
 	int ret;
@@ -357,17 +359,18 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
 	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, 0, &panel, &bridge);
 	dev_info(dp->dev, "Finding drm panel or bridge\n");
 	if (ret) {
-		dev_dbg(dp->dev, "Finding drm panel or bridge failed\n");
-		 return ret;
+		dev_info(dp->dev, "Finding drm panel or bridge failed\n");
+		// return ret;
 	}
 
 	dp->plat_data.panel = panel;
-	dp->plat_data.bridge = bridge;
+	dp->plat_data.bridge = return_bridge(to_platform_device(dev));
+	// dp->plat_data.bridge = bridge;
 
 	dp_data = of_device_get_match_data(dev);
 	dev_info(dp->dev, "Device matching\n");
 	if (!dp_data) {
-		dev_dbg(dp->dev, "Device doesn't match\n");
+		dev_info(dp->dev, "Device doesn't match\n");
 		return -ENODEV;
 	}
 
@@ -381,17 +384,22 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
 	ret = rockchip_dp_drm_create_encoder(dp);
 	dev_info(dp->dev, "creating drm encoder\n");
 	if (ret) {
-		DRM_ERROR("failed to create drm encoder\n");
+		dev_info(dp->dev, "failed to create drm encoder\n");
 		return ret;
 	}
 
 	dp->plat_data.encoder = &dp->encoder;
-
+	dev_info(dp->dev, "Setted DP Encoder\n");
 	dp->plat_data.dev_type = ROCKCHIP_DP;
+	dev_info(dp->dev, "Device type is Rockchip DP\n");
 	dp->plat_data.subdev_type = dp_data->chip_type;
+	dev_info(dp->dev, "Subdev Type is chip type\n");
 	dp->plat_data.power_on = rockchip_dp_poweron;
+	dev_info(dp->dev, "Power on rockchip DP\n");
 	dp->plat_data.power_off = rockchip_dp_powerdown;
+	dev_info(dp->dev, "Power off rockchip DP\n");
 	dp->plat_data.get_modes = rockchip_dp_get_modes;
+	dev_info(dp->dev, "Get modes rockchip DP\n");
 
 	dp->adp = analogix_dp_bind(dev, dp->drm_dev, &dp->plat_data);
 	printk(KERN_DEBUG "Analogix DP bind");

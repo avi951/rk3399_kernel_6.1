@@ -2777,7 +2777,9 @@
 			};
 			spi1_cs0: spi1-cs0 {
 				rockchip,pins =
-					<1 10 RK_FUNC_2 &pcfg_pull_up>;
+					// <1 10 RK_FUNC_2 &pcfg_pull_none>,
+					<1 10 RK_FUNC_2 &pcfg_input>;
+
 			};
 			spi1_rx: spi1-rx {
 				rockchip,pins =
