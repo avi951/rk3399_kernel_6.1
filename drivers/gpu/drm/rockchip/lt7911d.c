@@ -25,11 +25,14 @@
 
 #include "lt7911d.h"
 
+#define I2C_BUS_AVAILABLE (	7)
+
 struct lt7911d {
 	struct drm_bridge bridge;
 	struct drm_connector connector;
 	struct drm_display_mode mode;
 	struct device *dev;
+	struct i2c_client *client;
 	struct analogix_dp_device *dp;
 	struct regmap *regmap[3];
 	struct gpio_desc *reset_n;
@@ -374,9 +377,9 @@ static int lt7911d_i2c_init(struct lt7911d *lt7911d,
  			   struct i2c_adapter *adapter)
 {
  	struct i2c_board_info info[] = {
- 		{ I2C_BOARD_INFO("lt7911dp0", 0x2b), },
- 		{ I2C_BOARD_INFO("lt7911dp1", 0x2c), },
- 		{ I2C_BOARD_INFO("lt7911dp2", 0x44), }
+ 		{ I2C_BOARD_INFO("lt7911d", 0x2b), }
+ 		// { I2C_BOARD_INFO("lt7911dp1", 0x2c), },
+ 		// { I2C_BOARD_INFO("lt7911dp2", 0x44), }
  	};
  	struct regmap *regmap;
  	unsigned int i;
@@ -403,6 +406,27 @@ static int lt7911d_i2c_init(struct lt7911d *lt7911d,
  	return 0;
  }
 
+static int lt7911d_i2c_probe(struct i2c_client *client,
+			const struct i2c_device_id *id)
+{
+	struct device *dev = &client->dev;
+	struct lt7911d *lt7911d;
+	u32 val;
+	int ret;
+
+	lt7911d = devm_kzalloc(dev, sizeof(*lt7911d), GFP_KERNEL);
+	if(!lt7911d)
+		return -ENOMEM;
+
+	lt7911d->dev = dev;
+	lt7911d->client = client;
+	i2c_set_clientdata(client, lt7911d);
+
+	lt7911d_i2c_init(lt7911d, client->adapter);
+
+	return 0;
+}
+
 static int lt7911d_probe(struct platform_device *pdev)
 // static int lt7911d_probe(struct device *dev)
 {
@@ -412,6 +436,8 @@ static int lt7911d_probe(struct platform_device *pdev)
 	struct i2c_adapter *adapter;
 	int ret;
 
+	dev_info(dev, "LT7911D probbed!");
+
 	lt7911d = devm_kzalloc(dev, sizeof(*lt7911d), GFP_KERNEL);
 	if (!lt7911d)
 		return -ENOMEM;
@@ -420,29 +446,34 @@ static int lt7911d_probe(struct platform_device *pdev)
 	// lt7911d->dp->dev = dev;
 	platform_set_drvdata(pdev, lt7911d);
 
-	lt7911d->reset_n = devm_gpiod_get(dev, "reset", GPIOD_ASIS);
+	lt7911d->reset_n = devm_gpiod_get_optional(dev, "reset", GPIOD_ASIS);
 	if (IS_ERR(lt7911d->reset_n)) {
 		ret = PTR_ERR(lt7911d->reset_n);
 		dev_err(dev, "failed to request reset GPIO: %d\n", ret);
 		// return ret;
 	}
 
+	dev_info(dev, "Device Name: %s", dev->init_name);
+
 	node = of_parse_phandle(dev->of_node, "i2c-bus", 0);
 	if (!node) {
 		dev_err(dev, "No i2c-bus found\n");
 		return -ENODEV;
 	}
+	dev_info(dev, "Node found: %s: %s", node->full_name, dev->of_node->full_name);
 
 	/* adapter = of_find_i2c_adapter_by_node(node);
+	// adapter = i2c_get_adapter(7);
 	of_node_put(node);
 	if (!adapter) {
 		dev_err(dev, "No i2c adapter found\n");
 		return -EPROBE_DEFER;
 	}
+	dev_info(dev, "I2C Adapter found");
 
 	ret = lt7911d_i2c_init(lt7911d, adapter);
-	 if (ret)
-		return ret; */
+	if (ret)
+		return ret;
 
 	/* TODO: interrupt handing */
 
@@ -454,7 +485,7 @@ static int lt7911d_probe(struct platform_device *pdev)
 		return ret;
 	}
 	// Init LT7911D bridge
-	// lt7911d_init(lt7911d);
+	lt7911d_init(lt7911d);
 
 	lt7911d_bridge_dp = &(lt7911d->bridge);
 

@@ -2625,8 +2625,10 @@ struct i2c_adapter *i2c_get_adapter(int nr)
 
 	mutex_lock(&core_lock);
 	adapter = idr_find(&i2c_adapter_idr, nr);
-	if (!adapter)
+	if (!adapter) {
+		printk(KERN_INFO "No idr_find");
 		goto exit;
+	}
 
 	if (try_module_get(adapter->owner))
 		get_device(&adapter->dev);

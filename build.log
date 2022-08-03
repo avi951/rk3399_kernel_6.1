@@ -14,30 +14,17 @@ grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
   CALL    ../scripts/checksyscalls.sh
 make[2]: 'include/generated/vdso-offsets.h' is up to date.
   CHK     include/generated/compile.h
-  DTC     arch/arm64/boot/dts/rockchip/rockpi-4b-linux.dtb
   GZIP    kernel/config_data.gz
   CHK     kernel/config_data.h
+  UPD     kernel/config_data.h
+  CC      kernel/configs.o
+  DTC     arch/arm64/boot/dts/rockchip/rockpi-4b-linux.dtb
 grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
-  CC      drivers/gpu/drm/rockchip/lt7911d.o
-../drivers/gpu/drm/rockchip/lt7911d.c: In function ‘lt7911d_init’:
-../drivers/gpu/drm/rockchip/lt7911d.c:60:15: warning: unused variable ‘version’ [-Wunused-variable]
-   60 |  unsigned int version[2];
-      |               ^~~~~~~
-../drivers/gpu/drm/rockchip/lt7911d.c:57:5: warning: unused variable ‘lanes’ [-Wunused-variable]
-   57 |  u8 lanes = 4;
-      |     ^~~~~
-../drivers/gpu/drm/rockchip/lt7911d.c: In function ‘lt7911d_probe’:
-../drivers/gpu/drm/rockchip/lt7911d.c:412:22: warning: unused variable ‘adapter’ [-Wunused-variable]
-  412 |  struct i2c_adapter *adapter;
-      |                      ^~~~~~~
-At top level:
-../drivers/gpu/drm/rockchip/lt7911d.c:373:12: warning: ‘lt7911d_i2c_init’ defined but not used [-Wunused-function]
-  373 | static int lt7911d_i2c_init(struct lt7911d *lt7911d,
-      |            ^~~~~~~~~~~~~~~~
-  LD      drivers/gpu/drm/rockchip/built-in.o
-  LD      drivers/gpu/drm/built-in.o
-  LD      drivers/gpu/built-in.o
+  LD      kernel/built-in.o
+  CC      fs/compat_ioctl.o
+  LD      net/built-in.o
   LD      drivers/built-in.o
+  LD      fs/built-in.o
   LINK    vmlinux
   LD      vmlinux.o
   MODPOST vmlinux.o
@@ -51,7 +38,7 @@ At top level:
   LD      vmlinux
   SORTEX  vmlinux
   SYSMAP  System.map
-  OBJCOPY arch/arm64/boot/Image
   Building modules, stage 2.
+  OBJCOPY arch/arm64/boot/Image
   MODPOST 2 modules
 make[1]: Leaving directory '/home/dj/kernel_rockchip_linux/out'

@@ -323,7 +323,7 @@ struct drm_bridge *of_drm_find_bridge(struct device_node *np)
 		bridge = bridge->list->next;
 	}*/
 
-	// mutex_lock(&bridge_lock);
+	mutex_lock(&bridge_lock);
 
 	list_for_each_entry(bridge, &bridge_list, list) {
 		printk(KERN_INFO "Bridges: %s\n", bridge->of_node->name);
@@ -333,7 +333,7 @@ struct drm_bridge *of_drm_find_bridge(struct device_node *np)
 		}
 	}
 
-	// mutex_unlock(&bridge_lock);
+	mutex_unlock(&bridge_lock);
 	return NULL;
 }
 EXPORT_SYMBOL(of_drm_find_bridge);
