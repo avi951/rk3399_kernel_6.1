@@ -1420,7 +1420,7 @@ static struct i2c_driver lt7911d_driver = {
 	.remove = lt7911d_remove,
 };
 
-static int __init lt7911d_driver_init(void)
+/* static int __init lt7911d_driver_init(void)
 {
 	return i2c_add_driver(&lt7911d_driver);
 }
@@ -1428,10 +1428,11 @@ static int __init lt7911d_driver_init(void)
 static void __exit lt7911d_driver_exit(void)
 {
 	i2c_del_driver(&lt7911d_driver);
-}
+} */
 
-device_initcall_sync(lt7911d_driver_init);
-module_exit(lt7911d_driver_exit);
+// device_initcall_sync(lt7911d_driver_init);
+// module_exit(lt7911d_driver_exit);
+module_i2c_driver(lt7911d_driver);
 
 MODULE_DESCRIPTION("Lontium lt7911d HDMI to CSI-2 bridge driver");
 MODULE_AUTHOR("Jianwei Fan <jianwei.fan@rock-chips.com>");

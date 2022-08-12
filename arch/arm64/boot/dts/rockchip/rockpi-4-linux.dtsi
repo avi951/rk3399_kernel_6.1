@@ -808,7 +808,7 @@
 };
 
 &i2c7 {
-	status = "disabled";
+	status = "okay";
 
 	lt7911d: lt7911d@2b {
 		compatible = "rockchip,lt7911d";
@@ -818,15 +818,15 @@
 		clock-names = "xvclk";
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PB5 IRQ_TYPE_EDGE_RISING>;
-		power-domains = <&power RK3399_PD_VI>;
-		power-supply = <&vcc3v3_s0>;
+		power-domains = <&power RK3399_PD_EDP>;
+		power-supply = <&vcc3v3_sys>;
 		// i2c-bus = <&i2c7>;
 		// backlight = <&backlight>;
 		force-hpd;
 		// pinctrl-names = "default";
 		// pinctrl-0 = <&mipim1_camera1_clk>;
 		// reset = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
-		reset = <&cru SRST_P_EDP_CTRL>;
+		reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
 		// power-gpios = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
 		// hpd-ctl-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
 		// plugin-det-gpios = <&gpio0 RK_PD6 GPIO_ACTIVE_LOW>;
@@ -855,7 +855,7 @@
 					remote-endpoint = <&edp_out_lt7911d>;
 					data-lanes = <1 2 3 4>;
 				};
-			}; 
+			};
 			
 			port@1 {
 				status = "okay";
@@ -1414,6 +1414,8 @@
 	names = "rockchip-dp";
 	force-hpd;
 	i2c-bus = <&i2c7_xfer>;
+	power-domains = <&power RK3399_PD_EDP>;
+	reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
 	// /delete-node/ pinctrl-0;
 
 	/* ports {

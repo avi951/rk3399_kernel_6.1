@@ -104,12 +104,143 @@ static void dp_init(struct rockchip_dp_device *dp)
 {
         u8 lanes = 4;
         const struct drm_display_mode *mode = &dp->mode;
-        // u32 hactive, hfp, hsync, hbp, vfp, vsync, vbp, htotal, vtotal;
-        unsigned int version[2];
+        u32 hactive, hfp, hsync, hbp, vfp, vsync, vbp, htotal, vtotal;
+        unsigned int version[2], clk[3];
+	int i, j;
+		unsigned char EDID[128] = {
+          0x00,
+          0xff,
+          0xff,
+          0xff,
+          0xff,
+          0xff,
+          0xff,
+          0x00,
+          0x31,
+          0xd8,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x05,
+          0x16,
+          0x01,
+          0x03,
+          0x6d,
+          0x32,
+          0x1c,
+          0x78,
+          0xea,
+          0x5e,
+          0xc0,
+          0xa4,
+          0x59,
+          0x4a,
+          0x98,
+          0x25,
+          0x20,
+          0x50,
+          0x54,
+          0x00,
+          0x00,
+          0x00,
+          0xd1,
+          0xc0,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x01,
+          0x02,
+          0x3a,
+          0x80,
+          0x18,
+          0x71,
+          0x38,
+          0x2d,
+          0x40,
+          0x58,
+          0x2c,
+          0x45,
+          0x00,
+          0xf4,
+          0x19,
+          0x11,
+          0x00,
+          0x00,
+          0x1e,
+          0x00,
+          0x00,
+          0x00,
+          0xff,
+          0x00,
+          0x4c,
+          0x69,
+          0x6e,
+          0x75,
+          0x78,
+          0x20,
+          0x23,
+          0x30,
+          0x0a,
+          0x20,
+          0x20,
+          0x20,
+          0x20,
+          0x00,
+          0x00,
+          0x00,
+          0xfd,
+          0x00,
+          0x3b,
+          0x3d,
+          0x42,
+          0x44,
+          0x0f,
+          0x00,
+          0x0a,
+          0x20,
+          0x20,
+          0x20,
+          0x20,
+          0x20,
+          0x20,
+          0x00,
+          0x00,
+          0x00,
+          0xfc,
+          0x00,
+          0x4c,
+          0x69,
+          0x6e,
+          0x75,
+          0x78,
+          0x20,
+          0x46,
+          0x48,
+          0x44,
+          0x0a,
+          0x20,
+          0x20,
+          0x20,
+          0x00,
+          0x05,
+      };
 
         /* TODO: lvds output init */
 
-        /* hactive = mode->hdisplay;
+        hactive = mode->hdisplay;
         hfp = mode->hsync_start - mode->hdisplay;
         hsync = mode->hsync_end - mode->hsync_start;
         hbp = mode->htotal - mode->hsync_end;
@@ -117,7 +248,7 @@ static void dp_init(struct rockchip_dp_device *dp)
         vsync = mode->vsync_end - mode->vsync_start;
         vbp = mode->vtotal - mode->vsync_end;
         htotal = mode->htotal;
-        vtotal = mode->vtotal; */
+        vtotal = mode->vtotal;
 
 	// mutex_lock(&dp->i2c->lock);
 
@@ -135,6 +266,73 @@ static void dp_init(struct rockchip_dp_device *dp)
         	         version[0], version[1]);
 	// }
 	// mutex_unlock(&dp->i2c->lock);
+	// dev_info(dp->dev, "Regs:\n");
+      // regmap_read(dp->regmap[0], 0xEE);
+      // regmap_read(dp->regmap[0], 0xFF);
+
+      // I2C
+      regmap_write(dp->regmap[0], 0xFF, 0x80);
+      regmap_write(dp->regmap[0], 0xEE, 0x01);
+
+      // configure
+      regmap_write(dp->regmap[0], 0x5A, 0x80);
+      regmap_write(dp->regmap[0], 0x5E, 0xC0);
+      regmap_write(dp->regmap[0], 0x58, 0x00);
+      regmap_write(dp->regmap[0], 0x59, 0x51);
+      regmap_write(dp->regmap[0], 0x5A, 0x90);
+
+      //block erase
+      regmap_write(dp->regmap[0], 0x5A, 0x84);
+      regmap_write(dp->regmap[0], 0x5A, 0x80);
+      regmap_write(dp->regmap[0], 0x5B, 0x01);
+      regmap_write(dp->regmap[0], 0x5C, 0x80);
+      regmap_write(dp->regmap[0], 0x5D, 0x00);
+      regmap_write(dp->regmap[0], 0x5A, 0x81);
+      regmap_write(dp->regmap[0], 0x5A, 0x00);
+
+      for (j=0; j<8; j++) {
+        regmap_write(dp->regmap[0], 0xFF, 0x90);
+        regmap_write(dp->regmap[0], 0x02, 0xDF);
+        regmap_write(dp->regmap[0], 0x02, 0xFF);
+
+        // WREN
+        regmap_write(dp->regmap[0], 0xFF, 0x80);
+        regmap_write(dp->regmap[0], 0x5A, 0x84);
+        regmap_write(dp->regmap[0], 0x5A, 0x80);
+
+        // Data to FIFO
+        regmap_write(dp->regmap[0], 0x5E, 0xEF);
+        regmap_write(dp->regmap[0], 0x5A, 0xA0);
+        regmap_write(dp->regmap[0], 0x5A, 0x80);
+        regmap_write(dp->regmap[0], 0x58, 0x01);
+
+        for (i=0; i<16; i++) {
+          regmap_write(dp->regmap[0], 0x59, EDID[j * 16 + i]);
+          // EDID[]++;
+        }
+
+        // FIFO to flash
+        regmap_write(dp->regmap[0], 0x5B, 0x01);
+        regmap_write(dp->regmap[0], 0x5C, 0x80);
+        regmap_write(dp->regmap[0], 0x5D, 0x00 + j * 16);
+        regmap_write(dp->regmap[0], 0x5E, 0xE0);
+        regmap_write(dp->regmap[0], 0x5A, 0x90);
+        regmap_write(dp->regmap[0], 0x5A, 0x80);
+      }
+
+      // WRDI
+      regmap_write(dp->regmap[0], 0x5A, 0x88);
+      regmap_write(dp->regmap[0], 0x5A, 0x80);
+
+      // get Hsync, Vsync, HBP, VBP, HFP, VFP
+      regmap_write(dp->regmap[0], 0xFF, 0xA0);
+      regmap_write(dp->regmap[0], 0x34, 0x21);
+      regmap_write(dp->regmap[0], 0xFF, 0xB8);
+      regmap_read(dp->regmap[0], 0xB1, &clk[0]);
+      regmap_read(dp->regmap[0], 0xB2, &clk[1]);
+      regmap_read(dp->regmap[0], 0xB3, &clk[2]);
+      dev_info(dp->dev, "Hsync: %02x%02x%02x\n",
+				clk[0], clk[1], clk[2]);
 
 }
 
@@ -219,12 +417,16 @@ static void rockchip_dp_drm_encoder_enable(struct drm_encoder *encoder)
 	int ret;
 	u32 val;
 
-	if (!dp->data->has_vop_sel)
+	if (!dp->data->has_vop_sel) {
+		dev_info(dp->dev, "does not have vop sel");
 		return;
+	}
 
 	ret = drm_of_encoder_active_endpoint_id(dp->dev->of_node, encoder);
-	if (ret < 0)
+	if (ret < 0) {
+		dev_info(dp->dev, "No active endpoint for DRM encoder");
 		return;
+	}
 
 	if (ret)
 		val = dp->data->lcdsel_lit;
@@ -387,12 +589,12 @@ static int rockchip_dp_drm_create_encoder(struct rockchip_dp_device *dp)
 	encoder->port = dev->of_node;
 	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm_dev,
 							     dev->of_node);
-	DRM_DEBUG_KMS("possible_crtcs = 0x%x\n", encoder->possible_crtcs);
+	dev_info(dp->dev, "possible_crtcs = x%x\n", encoder->possible_crtcs);
 
 	ret = drm_encoder_init(drm_dev, encoder, &rockchip_dp_encoder_funcs,
 			       DRM_MODE_ENCODER_TMDS, NULL);
 	if (ret) {
-		DRM_ERROR("failed to initialize encoder with drm\n");
+		dev_info(dp->dev, "failed to initialize encoder with drm\n");
 		return ret;
 	}
 
@@ -597,35 +799,23 @@ static const struct regmap_config dp_regmap_config = {
 	.max_register = 0xff,
 };
 
-static int dp_i2c_init(struct rockchip_dp_device *dp,
-			struct i2c_adapter *adapter)
+static int dp_i2c_init(struct rockchip_dp_device *dp)
 {
-	struct i2c_board_info info[] = {
-		{ I2C_BOARD_INFO("lt7911d", 0x2b),
-		I2C_BOARD_INFO("lt7911d", 0x2c),
-		I2C_BOARD_INFO("lt7911d", 0x44), }
-	};
 	struct regmap *regmap;
 	unsigned int i;
 	int ret;
 
-	for (i = 0; i < ARRAY_SIZE(info); i++) {
-		struct i2c_client *client;
+	struct i2c_client *client = dp->client;
 
-		client = i2c_new_device(adapter, &info[i]);
-		if(!client)
-			return -ENODEV;
-
-		regmap = devm_regmap_init_i2c(client, &dp_regmap_config);
-		if (IS_ERR(regmap)) {
-			ret = PTR_ERR(regmap);
-			dev_info(dp->dev,
-				"Failed to initialize regmap: %d\n", ret);
-			return ret;
-		}
-
-		dp->regmap[i] = regmap;
+	regmap = devm_regmap_init_i2c(client, &dp_regmap_config);
+	if (IS_ERR(regmap)) {
+		ret = PTR_ERR(regmap);
+		dev_info(dp->dev,
+			"Failed to initialize regmap: %d\n", ret);
+		return ret;
 	}
+
+	dp->regmap[i] = regmap;
 
 	return 0;
 }
@@ -703,7 +893,7 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
         }
         dev_info(dev, "Node found: %s: %s", node->full_name, dev->of_node->full_name); */
 
-        adapter = dp_i2c_adapter(dp);
+        /* adapter = dp_i2c_adapter(dp);
         // adapter = i2c_get_adapter(7);
         // of_node_put(node);
         if (!adapter) {
@@ -714,9 +904,9 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
 
         ret = dp_i2c_init(dp, adapter);
         if (ret)
-                return ret;
+                return ret; */
 
-	dp_init(dp);
+	// dp_init(dp);
 
 	return 0;
 }
@@ -764,6 +954,7 @@ static int dp_i2c_probe(struct i2c_client *client,
 {
 	struct device *dev = &client->dev;
 	struct rockchip_dp_device *dp;
+	int ret;
 
 	dev_info(dev, "Initializing lt7911d i2c\n");
 
@@ -776,7 +967,11 @@ static int dp_i2c_probe(struct i2c_client *client,
 	i2c_set_clientdata(client, dp);
 
 	dev_info(dev, "Client data set\n");
-	// dp_i2c_init(dp, client->adapter);
+	ret = dp_i2c_init(dp);
+	if (ret < 0)
+		dev_dbg(dev, "Creating I2C regmap failed");
+
+	dp_init(dp);
 	return 0;
 }
 
@@ -786,7 +981,7 @@ static int dp_i2c_remove(struct i2c_client *client)
 }
 
 static const struct i2c_device_id dp_i2c_id[] = {
-	{ "lt7911d", 0 },
+	{ "lt7911d"},
 	{}
 };
 
@@ -834,7 +1029,7 @@ static const struct rockchip_dp_chip_data rk3288_dp = {
 };
 
 static const struct of_device_id dp_i2c_match[] = {
-	{ .compatible = "lt7911d" },
+	{ .compatible = "rockchip,lt7911d" },
 	{}
 };
 MODULE_DEVICE_TABLE(of, dp_i2c_match);

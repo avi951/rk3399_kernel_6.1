@@ -815,7 +815,7 @@ static void analogix_dp_commit(struct analogix_dp_device *dp)
 					 dp->video_info.max_link_rate);
 	if (ret) {
 		dev_err(dp->dev, "unable to do link train\n");
-		return;
+		// return;
 	}
 
 	analogix_dp_enable_scramble(dp, 1);

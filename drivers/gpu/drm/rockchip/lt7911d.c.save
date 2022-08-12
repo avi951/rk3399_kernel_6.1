@@ -75,7 +75,7 @@ static void lt7911d_init(struct lt7911d *lt7911d)
 	vtotal = mode->vtotal;
 
 	// get chip id
-	/* regmap_write(lt7911d->regmap[0], 0xff, 0x80);
+	regmap_write(lt7911d->regmap[0], 0xff, 0x80);
 	regmap_write(lt7911d->regmap[0], 0xee, 0x01);
 
 	regmap_write(lt7911d->regmap[0], 0xff, 0xa0);
@@ -84,7 +84,7 @@ static void lt7911d_init(struct lt7911d *lt7911d)
 	regmap_read(lt7911d->regmap[0], 0x01, &version[1]);
 
 	dev_info(lt7911d->dev, "lt7911d ID: %02x, %02x\n",
-	 	 version[0], version[1]); */
+	 	 version[0], version[1]);
 
 	// /* DigitalClockEn */
 	// regmap_write(lt7911d->regmap[0], 0x08, 0xff);
@@ -450,17 +450,17 @@ static int lt7911d_probe(struct platform_device *pdev)
 	if (IS_ERR(lt7911d->reset_n)) {
 		ret = PTR_ERR(lt7911d->reset_n);
 		dev_err(dev, "failed to request reset GPIO: %d\n", ret);
-		return ret;
+		// return ret;
 	}
 
 	dev_info(dev, "Device Name: %s\n", dev->init_name);
 
-	/* node = of_parse_phandle(dev->of_node, "i2c-bus", 0);
+	node = of_parse_phandle(dev->of_node, "i2c-bus", 0);
 	if (!node) {
 		dev_err(dev, "No i2c-bus found\n");
 		return -ENODEV;
 	}
-	dev_info(dev, "Node found: %s: %s", node->full_name, dev->of_node->full_name); */
+	dev_info(dev, "Node found: %s: %s", node->full_name, dev->of_node->full_name);
 
 	/* adapter = of_find_i2c_adapter_by_node(node);
 	// adapter = i2c_get_adapter(7);
@@ -485,7 +485,7 @@ static int lt7911d_probe(struct platform_device *pdev)
 		return ret;
 	}
 	// Init LT7911D bridge
-	// lt7911d_init(lt7911d);
+	lt7911d_init(lt7911d);
 
 	lt7911d_bridge_dp = &(lt7911d->bridge);
 
