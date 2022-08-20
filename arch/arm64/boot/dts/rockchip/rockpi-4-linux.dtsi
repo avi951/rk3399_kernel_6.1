@@ -301,7 +301,7 @@
 	#sound-dai-cells = <0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmi_i2c_xfer>, <&hdmi_cec>;
-	status = "okay";
+	status = "disabled";
 };
 
 &csi2_dcphy0 {
@@ -1397,7 +1397,7 @@
 };
 
 &hdmi_in_vopl {
-	status = "okay";
+	status = "disabled";
 };
 
 &hdmi_in_vopb {
@@ -1405,7 +1405,7 @@
 };
 
 &route_hdmi {
-	status = "okay";
+	status = "disabled";
 	connect = <&vopl_out_hdmi>;
 };
 
@@ -1436,7 +1436,7 @@
 
 &route_edp {
 	status = "okay";
-	connect = <&vopb_out_edp>;
+	// connect = <&vopb_out_edp>;
 };
 
 &vopb_out_edp {

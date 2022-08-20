@@ -190,7 +190,7 @@ static int try_to_bring_up_master(struct master *master,
 	if (ret < 0) {
 		devres_release_group(master->dev, NULL);
 		dev_info(master->dev, "master bind failed: %d\n", ret);
-		// goto out;
+		goto out;
 	}
 
 	master->bound = true;
