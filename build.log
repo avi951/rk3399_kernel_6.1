@@ -14,37 +14,12 @@ grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
   CALL    ../scripts/checksyscalls.sh
 make[2]: 'include/generated/vdso-offsets.h' is up to date.
   CHK     include/generated/compile.h
-  DTC     arch/arm64/boot/dts/rockchip/rockpi-4b-linux.dtb
+  DTC     arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtb
   GZIP    kernel/config_data.gz
   CHK     kernel/config_data.h
 grep: include/linux/mali/mali_utgard_uk_types.h: No such file or directory
-  CC      drivers/gpu/drm/rockchip/analogix_dp-rockchip.o
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c: In function ‘dp_init’:
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:106:12: warning: unused variable ‘lanes’ [-Wunused-variable]
-  106 |         u8 lanes = 4;
-      |            ^~~~~
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c: In function ‘dp_i2c_read’:
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:541:17: warning: "/*" within comment [-Wcomment]
-  541 |                 /* Check for error condition on the bus
-      |                  
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:518:13: warning: unused variable ‘stat’ [-Wunused-variable]
-  518 |         int stat;
-      |             ^~~~
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c: In function ‘dp_i2c_write’:
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:578:17: warning: "/*" within comment [-Wcomment]
-  578 |                 /* Check for error condition on the bus
-      |                  
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:556:13: warning: unused variable ‘stat’ [-Wunused-variable]
-  556 |         int stat;
-      |             ^~~~
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c: In function ‘rockchip_dp_bind’:
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:734:22: warning: unused variable ‘adapter’ [-Wunused-variable]
-  734 |  struct i2c_adapter *adapter;
-      |                      ^~~~~~~
-At top level:
-../drivers/gpu/drm/rockchip/analogix_dp-rockchip.c:662:28: warning: ‘dp_i2c_adapter’ defined but not used [-Wunused-function]
-  662 | static struct i2c_adapter *dp_i2c_adapter(struct rockchip_dp_device *dp)
-      |                            ^~~~~~~~~~~~~~
+  CC      drivers/gpu/drm/rockchip/rockchip_drm_drv.o
+  LD      drivers/gpu/drm/rockchip/rockchipdrm.o
   LD      drivers/gpu/drm/rockchip/built-in.o
   LD      drivers/gpu/drm/built-in.o
   LD      drivers/gpu/built-in.o
@@ -62,7 +37,7 @@ At top level:
   LD      vmlinux
   SORTEX  vmlinux
   SYSMAP  System.map
-  OBJCOPY arch/arm64/boot/Image
   Building modules, stage 2.
+  OBJCOPY arch/arm64/boot/Image
   MODPOST 2 modules
 make[1]: Leaving directory '/home/dj/kernel_rockchip_linux/out'

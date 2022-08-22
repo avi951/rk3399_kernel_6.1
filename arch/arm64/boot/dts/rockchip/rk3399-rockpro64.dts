@@ -331,7 +331,7 @@
 	route {
 		route_hdmi: route-hdmi {
 			status = "okay";
-			connect = <&vopb_out_hdmi>;
+			connect = <&vopl_out_hdmi>;
 		};
 
 		route_dsi: route-dsi {
@@ -340,7 +340,7 @@
 		};
 
 		route_edp: route-edp {
-			status = "disabled";
+			status = "okay";
 			connect = <&vopb_out_edp>;
 		};
 	};
@@ -351,7 +351,10 @@
 };
 
 &edp {
-	/delete-node/ pinctrl-0;
+	status = "okay";
+	// reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
+	force-hpd;
+	// /delete-node/ pinctrl-0;
 };
 
 &emmc_phy {
@@ -405,8 +408,8 @@
 	rk808: pmic@1b {
 		compatible = "rockchip,rk808";
 		reg = <0x1b>;
-		interrupt-parent = <&gpio1>;
-		interrupts = <21 IRQ_TYPE_LEVEL_LOW>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <10 IRQ_TYPE_LEVEL_LOW>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&pmic_int_l>;
 		rockchip,system-power-controller;
@@ -596,7 +599,7 @@
 };
 
 &i2c1 {
-	status = "okay";
+	status = "disabled";
 	i2c-scl-rising-time-ns = <168>;
 	i2c-scl-falling-time-ns = <4>;
 
@@ -621,12 +624,37 @@
 		pinctrl-0 = <&fusb0_int>;
 		vbus-5v-gpios = <&gpio1 RK_PA3 GPIO_ACTIVE_HIGH>;
 		int-n-gpios = <&gpio1 RK_PA2 GPIO_ACTIVE_HIGH>;
-		status = "okay";
+		status = "disabled";
 	};
 };
 
 &i2c8 {
 	status = "okay";
+        lt7911d: lt7911d@2b {
+                compatible = "rockchip,lt7911d";
+                status = "okay";
+                reg = <0x2b>;
+                clocks = <&cru 27000000>;
+                clock-names = "xvclk";
+                interrupt-parent = <&gpio0>;
+                interrupts = <RK_PB5 IRQ_TYPE_EDGE_RISING>;
+                power-domains = <&power RK3399_PD_EDP>;
+                power-supply = <&vcc3v3_sys>;
+                // i2c-bus = <&i2c7>;
+                // backlight = <&backlight>;
+                force-hpd;
+                // pinctrl-names = "default";
+                // pinctrl-0 = <&mipim1_camera1_clk>;
+                // reset = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
+                // reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
+                // power-gpios = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
+                // hpd-ctl-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
+                // plugin-det-gpios = <&gpio0 RK_PD6 GPIO_ACTIVE_LOW>;
+                // rockchip,camera-module-index = <0>;
+                // rockchip,camera-module-facing = "back";
+                // rockchip,camera-module-name = "LT7911D";
+                // rockchip,camera-module-lens-name = "NC";
+	};
 };
 
 &i2s1 {
@@ -733,7 +761,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
 	sd-uhs-sdr104;
-	status = "okay";
+	status = "disabled";
 };
 
 &sdhci {
@@ -750,7 +778,7 @@
 	#sound-dai-cells = <0>;
 };
 
-&spi1 {
+/* &spi1 {
 	status = "okay";
 	flash@0 {
 		compatible = "gigadevice,gd25q128", "jedec,spi-nor";
@@ -761,7 +789,7 @@
 		spi-max-frequency = <24000000>;
 	};
 };
-
+*/
 &tcphy0 {
 	extcon = <&fusb0>;
 	status = "okay";
@@ -991,7 +1019,7 @@
 	pmic {
 		pmic_int_l: pmic-int-l {
 			rockchip,pins =
-				<1 RK_PC5 RK_FUNC_GPIO &pcfg_pull_up>;
+				<3 RK_PB2 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 
 		vsel1_gpio: vsel1-gpio {

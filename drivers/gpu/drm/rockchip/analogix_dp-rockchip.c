@@ -223,7 +223,7 @@ static void dp_init(struct rockchip_dp_device *dp)
 
       // WRDI
       regmap_write(dp->regmap[0], 0x5A, 0x88);
-      msleep(1);
+      mdelay(1);
       regmap_write(dp->regmap[0], 0x5A, 0x80);
 
       // get Hsync, Vsync, HBP, VBP, HFP, VFP

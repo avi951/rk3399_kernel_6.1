@@ -1377,13 +1377,17 @@ static int rockchip_drm_bind(struct device *dev)
 	struct device_node *parent_np;
 	struct drm_crtc *crtc;
 
+	dev_info(dev, "Rockchip drm bind!");
+
 	drm_dev = drm_dev_alloc(&rockchip_drm_driver, dev);
 	if (!drm_dev)
 		return -ENOMEM;
 
 	ret = drm_dev_set_unique(drm_dev, "%s", dev_name(dev));
-	if (ret)
+	if (ret) {
+		dev_info(dev, "Failed setting unique device: %s", dev_name(dev));
 		goto err_free;
+	}
 
 	dev_set_drvdata(dev, drm_dev);
 
@@ -1397,8 +1401,6 @@ static int rockchip_drm_bind(struct device *dev)
 	INIT_WORK(&private->commit_work, rockchip_drm_atomic_work);
 
 	drm_dev->dev_private = private;
-
-	printk(KERN_DEBUG "Rockchip drm bind!");
 
 	private->dmc_support = false;
 	private->devfreq = devfreq_get_devfreq_by_phandle(dev, 0);
@@ -1872,8 +1874,10 @@ static int rockchip_drm_platform_probe(struct platform_device *pdev)
 	int i;
 
 	DRM_INFO("Rockchip DRM driver version: %s\n", DRIVER_VERSION);
-	if (!np)
+	if (!np) {
+		dev_info(dev, "No device");
 		return -ENODEV;
+	}
 	/*
 	 * Bind the crtc ports first, so that
 	 * drm_of_find_possible_crtcs called from encoder .bind callbacks
