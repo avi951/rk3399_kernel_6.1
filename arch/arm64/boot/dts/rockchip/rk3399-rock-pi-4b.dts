@@ -57,3 +57,15 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&vcc5v0_host_en>;
 };
+
+&i2c7 {
+	status = "okay";
+
+	pca9570: gpio@24 {
+		status = "okay";
+		compatible = "nxp,pca9570";
+		reg = <0x24>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+};
