@@ -173,6 +173,8 @@ static int try_to_bring_up_master(struct master *master,
 		goto out;
 	}
 
+	dev_info(master->dev, "Component Master\n");
+
 	if (component && component->master != master) {
 		dev_info(master->dev, "Component Master: %d\n", ret);
 		ret = 0;

@@ -146,6 +146,65 @@
 		vin-supply = <&vcc_sys>;
 	};
 
+	backlight: edp-backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm0 0 740740 0>;
+		power-supply = <&vcc3v3_s3>;
+		brightness-levels = <
+			  0   1   2   3   4   5   6   7
+			  8   9  10  11  12  13  14  15
+			 16  17  18  19  20  21  22  23
+			 24  25  26  27  28  29  30  31
+			 32  33  34  35  36  37  38  39
+			 40  41  42  43  44  45  46  47
+			 48  49  50  51  52  53  54  55
+			 56  57  58  59  60  61  62  63
+			 64  65  66  67  68  69  70  71
+			 72  73  74  75  76  77  78  79
+			 80  81  82  83  84  85  86  87
+			 88  89  90  91  92  93  94  95
+			 96  97  98  99 100 101 102 103
+			104 105 106 107 108 109 110 111
+			112 113 114 115 116 117 118 119
+			120 121 122 123 124 125 126 127
+			128 129 130 131 132 133 134 135
+			136 137 138 139 140 141 142 143
+			144 145 146 147 148 149 150 151
+			152 153 154 155 156 157 158 159
+			160 161 162 163 164 165 166 167
+			168 169 170 171 172 173 174 175
+			176 177 178 179 180 181 182 183
+			184 185 186 187 188 189 190 191
+			192 193 194 195 196 197 198 199
+			200 201 202 203 204 205 206 207
+			208 209 210 211 212 213 214 215
+			216 217 218 219 220 221 222 223
+			224 225 226 227 228 229 230 231
+			232 233 234 235 236 237 238 239
+			240 241 242 243 244 245 246 247
+			248 249 250 251 252 253 254 255>;
+		default-brightness-level = <200>;
+		status = "okay";
+	};
+
+	edp_panel: edp-panel {
+		compatible = "simple-panel";
+		backlight = <&backlight>;
+		power-supply = <&vcc3v3_s0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&panel_en>;
+		// enable-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
+		// prepare-delay-ms = <20>;
+		// enable-delay-ms = <20>;
+		status = "okay";
+
+		ports {
+			panel_in_edp: endpoint {
+				remote-endpoint = <&edp_out_panel>;
+			};
+		};
+	};
+
 	clkin_gmac: external-gmac-clock {
 		compatible = "fixed-clock";
 		clock-frequency = <125000000>;
@@ -301,7 +360,7 @@
 	#sound-dai-cells = <0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmi_i2c_xfer>, <&hdmi_cec>;
-	status = "disabled";
+	status = "okay";
 };
 
 &csi2_dcphy0 {
@@ -811,8 +870,8 @@
 	status = "okay";
 
 	lt7911d: lt7911d@2b {
-		compatible = "rockchip,lt7911d";
-		status = "okay";
+		compatible = "simple-panel";
+		status = "disabled";
 		reg = <0x2b>;
 		clocks = <&cru 27000000>;
 		clock-names = "xvclk";
@@ -821,7 +880,6 @@
 		power-domains = <&power RK3399_PD_EDP>;
 		power-supply = <&vcc3v3_sys>;
 		// i2c-bus = <&i2c7>;
-		// backlight = <&backlight>;
 		force-hpd;
 		// pinctrl-names = "default";
 		// pinctrl-0 = <&mipim1_camera1_clk>;
@@ -837,6 +895,16 @@
 		ports {
 			#address-cells = <1>;
 			#size-cells = <0>;
+
+			/* port@0 {
+				status = "okay";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				panel_in_edp: endpoint {
+					remote-endpoint = <&edp_out_panel>;
+				};
+			}; */
+
 			port@0 {
 				status = "disabled";
 				#address-cells = <1>;
@@ -1163,6 +1231,12 @@
 		};
 	};
 
+	panel {
+		panel_en: panel-en {
+			rockchip,pins = <0 RK_PB5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
 	sdio-pwrseq {
 		wifi_enable_h: wifi-enable-h {
 			rockchip,pins =
@@ -1353,7 +1427,6 @@
 	};
 };
 
-
 &isp0_mmu {
 	status = "okay";
 };
@@ -1397,7 +1470,7 @@
 };
 
 &hdmi_in_vopl {
-	status = "disabled";
+	status = "okay";
 };
 
 &hdmi_in_vopb {
@@ -1405,7 +1478,7 @@
 };
 
 &route_hdmi {
-	status = "disabled";
+	status = "okay";
 	connect = <&vopl_out_hdmi>;
 };
 
@@ -1415,7 +1488,7 @@
 	force-hpd;
 	i2c-bus = <&i2c7_xfer>;
 	power-domains = <&power RK3399_PD_EDP>;
-	reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
+	reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_LOW>;
 	// /delete-node/ pinctrl-0;
 
 	/* ports {
@@ -1432,6 +1505,19 @@
 			};
 		};
 	}; */
+
+	ports {
+		edp_out: port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			edp_out_panel: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&panel_in_edp>;
+			};
+		};
+	};
 };
 
 &route_edp {

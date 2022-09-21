@@ -226,8 +226,10 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 	if (panel) {
 		printk(KERN_INFO "Checking for panel\n");
 		*panel = of_drm_find_panel(remote);
-		if (*panel)
+		if (*panel) {
+			printk(KERN_INFO "%s: Panel Found", remote->name);
 			ret = 0;
+		}
 	}
 
 	/* No panel found yet, check for a bridge next. */
