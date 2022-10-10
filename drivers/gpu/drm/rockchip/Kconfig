@@ -122,17 +122,6 @@ config ROCKCHIP_DRM_BACKLIGHT
 	  Vop cabc function request using vop self pwm devices, needed a
 	  unique backlight devices to manager vop and soc pwm devices.
 
-config DRM_LT7911D_BRIDGE
-	tristate "Lontium LT7911D eDP/MIPI CSI bridge"
-	depends on OF
-	select DRM_KMS_HELPER
-	select DRM_PANEL_BRIDGE
-	select REGMAP_I2C
-	select I2C_MUX
-	select GENERIC_PHY_MIPI_DPHY
-	help
-	  Lontium LT7911D eDP/MIPI CSI bridge chip driver.
-
 config ROCKCHIP_RK3066_HDMI
 	tristate "Rockchip specific extensions for RK3066 HDMI"
 	depends on DRM_ROCKCHIP

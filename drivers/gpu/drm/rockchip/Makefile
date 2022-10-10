@@ -19,7 +19,6 @@ obj-$(CONFIG_ROCKCHIP_RGB) += rockchip_rgb.o
 obj-$(CONFIG_ROCKCHIP_DRM_BACKLIGHT) += rockchip_drm_backlight.o
 obj-$(CONFIG_DRM_ROCKCHIP) += rockchip_vop_reg.o rockchipdrm.o
 obj-$(CONFIG_ROCKCHIP_DRM_TVE) += rockchip_drm_tve.o
-obj-$(CONFIG_DRM_LT7911D_BRIDGE) += lt7911d.o
 
 obj-$(CONFIG_ROCKCHIP_RK3066_HDMI) += rk3066_hdmi.o
 obj-$(CONFIG_DRM_ROCKCHIP_RK618) += rk618/

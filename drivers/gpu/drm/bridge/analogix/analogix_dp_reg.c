@@ -1046,7 +1046,7 @@ ssize_t analogix_dp_transfer(struct analogix_dp_device *dp,
 		timeout_loop++;
 		if (timeout_loop > DP_TIMEOUT_LOOP_COUNT) {
 			dev_err(dp->dev, "AUX CH command reply failed!\n");
-			// return -ETIMEDOUT;
+			return -ETIMEDOUT;
 		}
 		reg = analogix_dp_read(dp, ANALOGIX_DP_INT_STA);
 		usleep_range(10, 11);

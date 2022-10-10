@@ -815,7 +815,7 @@ static void analogix_dp_commit(struct analogix_dp_device *dp)
 					 dp->video_info.max_link_rate);
 	if (ret) {
 		dev_err(dp->dev, "unable to do link train\n");
-		// return;
+		return;
 	}
 
 	analogix_dp_enable_scramble(dp, 1);
@@ -1214,7 +1214,7 @@ analogix_dp_bind(struct device *dev, struct drm_device *drm_dev,
 	int ret;
 
 	if (!plat_data) {
-		dev_info(dev, "Invalided input plat_data\n");
+		dev_err(dev, "Invalided input plat_data\n");
 		return ERR_PTR(-EINVAL);
 	}
 
@@ -1236,7 +1236,7 @@ analogix_dp_bind(struct device *dev, struct drm_device *drm_dev,
 	if (ret)
 		return ERR_PTR(ret);
 
-	dp->phy = devm_phy_optional_get(dp->dev, "dp");
+	dp->phy = devm_phy_get(dp->dev, "dp");
 	if (IS_ERR(dp->phy)) {
 		dev_err(dp->dev, "no DP phy configured\n");
 		ret = PTR_ERR(dp->phy);

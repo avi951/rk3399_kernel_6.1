@@ -147,9 +147,10 @@
 	};
 
 	backlight: edp-backlight {
+		status = "okay";
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 740740 0>;
-		power-supply = <&vcc3v3_s3>;
+		power-supply = <&vcc3v3_sys>;
 		brightness-levels = <
 			  0   1   2   3   4   5   6   7
 			  8   9  10  11  12  13  14  15
@@ -184,18 +185,16 @@
 			240 241 242 243 244 245 246 247
 			248 249 250 251 252 253 254 255>;
 		default-brightness-level = <200>;
-		status = "okay";
 	};
 
 	edp_panel: edp-panel {
-		compatible = "simple-panel";
+		compatible = "lontium,lt7911";
 		backlight = <&backlight>;
-		power-supply = <&vcc3v3_s0>;
+		ddc-i2c-bus = <&i2c7>;
+		power-supply = <&vcc3v3_sys>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&panel_en>;
-		// enable-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
-		// prepare-delay-ms = <20>;
-		// enable-delay-ms = <20>;
+		pinctrl-0 = <&lt7911d_reset>;
+		reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_LOW>;
 		status = "okay";
 
 		ports {
@@ -361,79 +360,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmi_i2c_xfer>, <&hdmi_cec>;
 	status = "okay";
-};
-
-&csi2_dcphy0 {
-	status = "disabled";
-
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		#reg = <0>;
-
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			dp_mipi_in: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&lt7911d_out>;
-			};
-		};
-
-		port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			csidcphy0_out: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&mipi0_csi2_input>;
-			};
-		};
-	};
-};
-
-&mipi0_csi2 {
-	status = "okay";
-
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			mipi0_csi2_input: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&csidcphy0_out>;
-			};
-		};
-
-		port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			mipi0_csi2_output: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&cif_mipi_in0>;
-			};
-		};
-	};
-};
-
-&rkcif_mipi_lvds {
-	status = "okay";
-
-	port {
-		cif_mipi_in0: endpoint {
-			remote-endpoint = <&mipi0_csi2_output>;
-		};
-	};
 };
 
 &sdmmc {
@@ -820,46 +746,6 @@
 			};
 		};
 	};
-
-	camera1: camera-module@10 {
-		status = "okay";
-		compatible = "sony,imx219";
-		reg = <0x10>;
-
-		clocks = <&cru SCLK_CIF_OUT>;
-		clock-names = "clk_cif_out";
-		pinctrl-names = "rockchip,camera_default";
-		pwdn-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
-
-		rockchip,camera-module-index = <0>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "default";
-		rockchip,camera-module-lens-name = "default";
-
-		port {
-			ucam_out0: endpoint {
-				remote-endpoint = <&mipi_in_ucam0>;
-				data-lanes = <1 2>;
-			};
-		};
-	};
-
-	camera2: camera-module@36 {
-		status = "disabled";
-		compatible = "ovti,ov5647";
-		reg = <0x36>;
-
-		clocks = <&cru SCLK_CIF_OUT>;
-		clock-names = "clk_cif_out";
-		pinctrl-names = "rockchip,camera_default";
-
-		port {
-			ucam_out1: endpoint {
-				remote-endpoint = <&mipi_in_ucam0>;
-				data-lanes = <1 2>;
-			};
-		};
-	};
 };
 
 &i2c2 {
@@ -868,79 +754,6 @@
 
 &i2c7 {
 	status = "okay";
-
-	lt7911d: lt7911d@2b {
-		compatible = "simple-panel";
-		status = "disabled";
-		reg = <0x2b>;
-		clocks = <&cru 27000000>;
-		clock-names = "xvclk";
-		interrupt-parent = <&gpio0>;
-		interrupts = <RK_PB5 IRQ_TYPE_EDGE_RISING>;
-		power-domains = <&power RK3399_PD_EDP>;
-		power-supply = <&vcc3v3_sys>;
-		// i2c-bus = <&i2c7>;
-		force-hpd;
-		// pinctrl-names = "default";
-		// pinctrl-0 = <&mipim1_camera1_clk>;
-		// reset = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
-		reset-gpios = <&gpio3 RK_PC4 GPIO_ACTIVE_LOW>;
-		// power-gpios = <&gpio1 RK_PA6 GPIO_ACTIVE_HIGH>;
-		// hpd-ctl-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
-		// plugin-det-gpios = <&gpio0 RK_PD6 GPIO_ACTIVE_LOW>;
-		// rockchip,camera-module-index = <0>;
-		// rockchip,camera-module-facing = "back";
-		// rockchip,camera-module-name = "LT7911D";
-		// rockchip,camera-module-lens-name = "NC";
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			/* port@0 {
-				status = "okay";
-				#address-cells = <1>;
-				#size-cells = <0>;
-				panel_in_edp: endpoint {
-					remote-endpoint = <&edp_out_panel>;
-				};
-			}; */
-
-			port@0 {
-				status = "disabled";
-				#address-cells = <1>;
-				#size-cells = <0>;
-				lt7911d_out: endpoint@1 {
-					reg = <1>;
-					remote-endpoint = <&dp_mipi_in>;
-				};
-			};
-
-			/* port@1 {
-				status = "okay";
-				#address-cells = <1>;
-				#size-cells = <0>;
-				lt7911d_in_edp: endpoint {
-					remote-endpoint = <&edp_out_lt7911d>;
-					data-lanes = <1 2 3 4>;
-				};
-			};
-			
-			port@1 {
-				status = "okay";
-				#address-cells = <1>;
-				#size-cells = <0>;
-				lt7911d_in_vopb: endpoint@0 {
-					reg = <0>;
-					remote-endpoint = <&vopb_out_edp>;
-				};
-
-				lt7911d_in_vopl: endpoint@1 {
-					reg = <1>;
-					remote-endpoint = <&vopl_out_edp>;
-				};
-			}; */
-		};
-	};
 };
 
 &cpu_l0 {
@@ -1232,8 +1045,8 @@
 	};
 
 	panel {
-		panel_en: panel-en {
-			rockchip,pins = <0 RK_PB5 RK_FUNC_GPIO &pcfg_pull_none>;
+		lt7911d_reset: lt7911d-reset {
+			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
@@ -1402,18 +1215,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			mipi_in_ucam0: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&ucam_out0>;
-				data-lanes = <1 2>;
-			};
-		};
-
 		port@1 {
 			reg = <1>;
 			#address-cells = <1>;
@@ -1484,27 +1285,9 @@
 
 &edp {
 	status = "okay";
-	names = "rockchip-dp";
+	vcc = "vcc1v8_s0";
 	force-hpd;
-	i2c-bus = <&i2c7_xfer>;
-	power-domains = <&power RK3399_PD_EDP>;
-	reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_LOW>;
 	// /delete-node/ pinctrl-0;
-
-	/* ports {
-		edp_out: port@1 {
-			status = "okay"; 
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			edp_out_lt7911d: endpoint@0 {
-				reg = <0>;
-				remote-endpoint = <&lt7911d_in_edp>;
-				data-lanes = <1 2 3 4>;
-			};
-		};
-	}; */
 
 	ports {
 		edp_out: port@1 {
@@ -1522,17 +1305,15 @@
 
 &route_edp {
 	status = "okay";
-	// connect = <&vopb_out_edp>;
+	connect = <&vopb_out_edp>;
 };
 
 &vopb_out_edp {
 	status = "okay";
-	// remote-endpoint = <&lt7911d_in_vopb>;
 };
 
 &vopl_out_edp {
-	status = "okay";
-	// remote-endpoint = <&lt7911d_in_vopl>;
+	status = "disabled";
 };
 
 &edp_in_vopb {
