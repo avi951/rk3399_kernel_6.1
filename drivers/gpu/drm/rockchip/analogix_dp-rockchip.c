@@ -208,9 +208,14 @@ rockchip_dp_drm_encoder_atomic_check(struct drm_encoder *encoder,
 		s->bus_format = info->bus_formats[0];
 	else
 		s->bus_format = MEDIA_BUS_FMT_RGB888_1X24;
+	//s->bus_format = MEDIA_BUS_FMT_RGB888_1X24;
 	s->tv_state = &conn_state->tv;
 	s->eotf = TRADITIONAL_GAMMA_SDR;
 	s->color_space = V4L2_COLORSPACE_DEFAULT;
+
+	printk("output_mode: 0x%x\n", s->output_mode);
+	printk("output_type: 0x%x\n", s->output_type);
+	printk("bus_format: 0x%x\n", s->bus_format);
 
 	return 0;
 }
@@ -328,7 +333,7 @@ static int rockchip_dp_drm_create_encoder(struct rockchip_dp_device *dp)
 	encoder->port = dev->of_node;
 	encoder->possible_crtcs = drm_of_find_possible_crtcs(drm_dev,
 							     dev->of_node);
-	DRM_DEBUG_KMS("possible_crtcs = 0x%x\n", encoder->possible_crtcs);
+	dev_err(dp->dev, "possible_crtcs = 0x%x\n", encoder->possible_crtcs);
 
 	ret = drm_encoder_init(drm_dev, encoder, &rockchip_dp_encoder_funcs,
 			       DRM_MODE_ENCODER_TMDS, NULL);
@@ -338,6 +343,9 @@ static int rockchip_dp_drm_create_encoder(struct rockchip_dp_device *dp)
 	}
 
 	drm_encoder_helper_add(encoder, &rockchip_dp_encoder_helper_funcs);
+
+	dev_err(dp->dev, "encode name is: %s\n", encoder->name);
+	dev_err(dp->dev, "encode full name is: %s\n", encoder->dev->dev->of_node->full_name);
 
 	return 0;
 }
@@ -355,6 +363,11 @@ static int rockchip_dp_bind(struct device *dev, struct device *master,
 	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, 0, &panel, &bridge);
 	if (ret)
 		return ret;
+
+	if(panel)
+		dev_err(dev, "panel founded name is: %s\n", panel->dev->of_node->name);
+	if(bridge)
+		dev_err(dev, "bridge founded name is: %s\n", bridge->of_node->name);
 
 	dp->plat_data.panel = panel;
 	dp->plat_data.bridge = bridge;

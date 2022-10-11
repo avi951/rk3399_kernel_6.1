@@ -146,7 +146,7 @@
 		vin-supply = <&vcc_sys>;
 	};
 
-	backlight: edp-backlight {
+	/*backlight: edp-backlight {
 		status = "okay";
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 740740 0>;
@@ -202,7 +202,7 @@
 				remote-endpoint = <&edp_out_panel>;
 			};
 		};
-	};
+	};*/
 
 	clkin_gmac: external-gmac-clock {
 		compatible = "fixed-clock";
@@ -326,18 +326,6 @@
 			linux,default-trigger = "heartbeat";
 			default-state = "on";
 		};
-
-		// user-led3 {
-		// 	gpios = <&gpio3 RK_PC6 GPIO_ACTIVE_LOW>;
-		// 	linux,default-trigger = "heartbeat";
-		// 	default-state = "on";
-		// };
-
-		user-led4 {
-			gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "none";
-			default-state = "off";
-		};
 	};
 
 	rk_headset {
@@ -350,6 +338,30 @@
 
 	test-power {
 		status = "okay";
+	};
+
+	lt7911: lt7911d {
+		compatible = "lt,lt7911";
+		vdd-supply = <&vcc3v3_sys>;
+		ddc-i2c-bus = <&i2c7>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lt7911_rst>;
+		reset-gpios = <&gpio3 30 GPIO_ACTIVE_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				bridge_in_edp: endpoint {
+					remote-endpoint = <&edp_out_bridge>;
+				};
+			};
+		};
 	};
 };
 
@@ -698,7 +710,7 @@
 };
 
 &i2c4 {
-	status = "okay";
+	status = "disabled";
 
 	fusb302@22 {
 		compatible = "fcs,fusb302";
@@ -987,6 +999,12 @@
 };
 
 &pinctrl {
+	lt7911d {
+		lt7911_rst: lt7911-rst {
+			rockchip,pins = <3 30 RK_FUNC_GPIO &pcfg_output_low>;
+		};
+	};
+
 	headphone {
 		hp_det: hp-det {
 			rockchip,pins =
@@ -1271,16 +1289,16 @@
 };
 
 &hdmi_in_vopl {
-	status = "okay";
+	status = "disabled";
 };
 
 &hdmi_in_vopb {
-	status = "disabled";
+	status = "okay";
 };
 
 &route_hdmi {
 	status = "okay";
-	connect = <&vopl_out_hdmi>;
+	connect = <&vopb_out_hdmi>;
 };
 
 &edp {
@@ -1295,9 +1313,9 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			edp_out_panel: endpoint@0 {
+			edp_out_bridge: endpoint@0 {
 				reg = <0>;
-				remote-endpoint = <&panel_in_edp>;
+				remote-endpoint = <&bridge_in_edp>;
 			};
 		};
 	};
@@ -1305,18 +1323,22 @@
 
 &route_edp {
 	status = "okay";
-	connect = <&vopb_out_edp>;
+	connect = <&vopl_out_edp>;
 };
 
 &vopb_out_edp {
-	status = "okay";
-};
-
-&vopl_out_edp {
 	status = "disabled";
 };
 
+&vopl_out_edp {
+	status = "okay";
+};
+
 &edp_in_vopb {
+	status = "disabled";
+};
+
+&edp_in_vopl {
 	status = "okay";
 };
 
@@ -1327,4 +1349,3 @@
 &vopb {
 	status = "okay";
 };
-

@@ -22,11 +22,14 @@ static uint32_t drm_crtc_port_mask(struct drm_device *dev,
 	struct drm_crtc *tmp;
 
 	drm_for_each_crtc(tmp, dev) {
+		dev_err(dev->dev, "value of index is: %d\n", index);
 		if (tmp->port == port)
 			return 1 << index;
 
 		index++;
 	}
+
+	dev_err(dev->dev, "returning 0\n");
 
 	return 0;
 }
@@ -54,13 +57,21 @@ uint32_t drm_of_find_possible_crtcs(struct drm_device *dev,
 			continue;
 		}
 
+		dev_err(dev->dev, "ep is: %s\n", ep->full_name);
+
 		remote_port = of_graph_get_remote_port(ep);
 		if (!remote_port) {
 			of_node_put(ep);
 			return 0;
 		}
 
+		dev_err(dev->dev, "remote port is: %s\n", remote_port->full_name);
+
+		dev_err(dev->dev, "possible crtcs value is: %d\n", possible_crtcs);
+
 		possible_crtcs |= drm_crtc_port_mask(dev, remote_port);
+
+		dev_err(dev->dev, "possible crtcs value aftre checking is: %d\n", possible_crtcs);
 
 		of_node_put(remote_port);
 	}
@@ -210,7 +221,7 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 	int ret = -EPROBE_DEFER;
 	struct device_node *remote;
 
-	printk(KERN_INFO "Finding drm for bridge\n");
+	printk(KERN_INFO "Finding drm for panel or bridge\n");
 
 	if (!panel && !bridge) {
 		printk(KERN_INFO "Invalid panel or bridge\n");
@@ -224,10 +235,11 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 	}
 
 	if (panel) {
-		printk(KERN_INFO "Checking for panel\n");
+		printk(KERN_INFO "Checking for panel: %s\n", remote->name);
 		*panel = of_drm_find_panel(remote);
 		if (*panel) {
-			printk(KERN_INFO "%s: Panel Found", remote->name);
+			printk(KERN_INFO "%s: Panel Found\n", remote->name);
+			printk(KERN_INFO "Panel name is: %s\n", (*panel)->dev->of_node->name);
 			ret = 0;
 		}
 	}
@@ -245,7 +257,7 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 				printk(KERN_INFO "Bridge not found\n");
 			}
 		} else {
-			printk(KERN_INFO "Bridge not found\n");
+			printk(KERN_INFO "Not checked for bridge as panel is already founded\n");
 			*bridge = NULL;
 		}
 	} else {

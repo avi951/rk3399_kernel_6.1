@@ -78,7 +78,7 @@ static int analogix_dp_detect_hpd(struct analogix_dp_device *dp)
 	 * will not work, so we need to give a force hpd action to
 	 * set HPD_STATUS manually.
 	 */
-	dev_dbg(dp->dev, "failed to get hpd plug status, try to force hpd\n");
+	dev_err(dp->dev, "failed to get hpd plug status, try to force hpd\n");
 
 	analogix_dp_force_hpd(dp);
 
@@ -87,7 +87,7 @@ static int analogix_dp_detect_hpd(struct analogix_dp_device *dp)
 		return -EINVAL;
 	}
 
-	dev_dbg(dp->dev, "success to get plug in status after force hpd\n");
+	dev_err(dp->dev, "success to get plug in status after force hpd\n");
 
 	return 0;
 }
@@ -180,13 +180,17 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 	buf[0] = dp->link_train.link_rate;
 	buf[1] = dp->link_train.lane_count;
 	retval = drm_dp_dpcd_write(&dp->aux, DP_LINK_BW_SET, buf, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_LINK_BW_SET failed\n");
 		return retval;
+	}
 
 	/* possibly enable downspread on the sink */
 	retval = drm_dp_dpcd_readb(&dp->aux, DP_MAX_DOWNSPREAD, &dpcd);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_MAX_DOWNSPREAD failed\n");
 		return retval;
+	}
 
 	if (dpcd & DP_MAX_DOWNSPREAD_0_5) {
 		DRM_DEV_INFO(dp->dev, "Enable downspread on the sink\n");
@@ -195,16 +199,20 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 
 		retval = drm_dp_dpcd_writeb(&dp->aux, DP_DOWNSPREAD_CTRL,
 					    DP_SPREAD_AMP_0_5);
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_DOWNSPREAD_CTRL failed\n");
 			return retval;
+		}
 	} else {
 		DRM_DEV_INFO(dp->dev, "Disable downspread on the sink\n");
 
 		analogix_dp_ssc_disable(dp);
 
 		retval = drm_dp_dpcd_writeb(&dp->aux, DP_DOWNSPREAD_CTRL, 0);
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_DOWNSPREAD_CTRL failed\n");
 			return retval;
+		}
 	}
 
 	/* Set TX pre-emphasis to minimum */
@@ -231,8 +239,10 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 	retval = drm_dp_dpcd_writeb(&dp->aux, DP_TRAINING_PATTERN_SET,
 				    DP_LINK_SCRAMBLING_DISABLE |
 					DP_TRAINING_PATTERN_1);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_TRAINING_PATTERN_SET failed\n");
 		return retval;
+	}
 
 	for (lane = 0; lane < lane_count; lane++)
 		buf[lane] = DP_TRAIN_PRE_EMPH_LEVEL_0 |
@@ -240,8 +250,10 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 
 	retval = drm_dp_dpcd_write(&dp->aux, DP_TRAINING_LANE0_SET, buf,
 				   lane_count);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_TRAINING_LANE0_SET failed\n");
 		return retval;
+	}
 
 	return 0;
 }
@@ -398,22 +410,28 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 	lane_count = dp->link_train.lane_count;
 
 	retval = drm_dp_dpcd_read(&dp->aux, DP_LANE0_1_STATUS, link_status, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_LANE0_1_STATUS failed\n");
 		return retval;
+	}
 
 	retval = drm_dp_dpcd_read(&dp->aux, DP_ADJUST_REQUEST_LANE0_1,
 				  adjust_request, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_ADJUST_REQUEST_LANE0_1 failed\n");
 		return retval;
+	}
 
 	if (analogix_dp_clock_recovery_ok(link_status, lane_count) == 0) {
 		retval = drm_dp_dpcd_readb(&dp->aux, DP_MAX_LANE_COUNT, &dpcd);
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_MAX_LANE_COUNT failed\n");
 			return retval;
+		}
 
 		tps3_supported = !!(dpcd & DP_TPS3_SUPPORTED);
 
-		dev_dbg(dp->dev, "Training pattern sequence 3 is%s supported\n",
+		dev_err(dp->dev, "Training pattern sequence 3 is%s supported\n",
 			tps3_supported ? "" : " not");
 
 		/* set training pattern for EQ */
@@ -425,8 +443,10 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 					    (tps3_supported ?
 					     DP_TRAINING_PATTERN_3 :
 					     DP_TRAINING_PATTERN_2));
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "setting training patter for EQ failed\n");
 			return retval;
+		}
 
 		dev_info(dp->dev, "Link Training Clock Recovery success\n");
 		dp->link_train.lt_state = EQUALIZER_TRAINING;
@@ -510,12 +530,12 @@ static int analogix_dp_process_equalizer_training(struct analogix_dp_device *dp)
 
 		analogix_dp_get_link_bandwidth(dp, &reg);
 		dp->link_train.link_rate = reg;
-		dev_dbg(dp->dev, "final bandwidth = %.2x\n",
+		dev_info(dp->dev, "final bandwidth = %.2x\n",
 			dp->link_train.link_rate);
 
 		analogix_dp_get_lane_count(dp, &reg);
 		dp->link_train.lane_count = reg;
-		dev_dbg(dp->dev, "final lane count = %.2x\n",
+		dev_info(dp->dev, "final lane count = %.2x\n",
 			dp->link_train.lane_count);
 
 		/* set enhanced mode if available */
@@ -625,16 +645,22 @@ static int analogix_dp_sw_link_training(struct analogix_dp_device *dp)
 			retval = analogix_dp_link_start(dp);
 			if (retval)
 				dev_err(dp->dev, "LT link start failed!\n");
+			 else
+			 	dev_err(dp->dev, "LT link started successfully\n");
 			break;
 		case CLOCK_RECOVERY:
 			retval = analogix_dp_process_clock_recovery(dp);
 			if (retval)
 				dev_err(dp->dev, "LT CR failed!\n");
+			 else
+			 	dev_err(dp->dev, "LT CR completed\n");
 			break;
 		case EQUALIZER_TRAINING:
 			retval = analogix_dp_process_equalizer_training(dp);
 			if (retval)
 				dev_err(dp->dev, "LT EQ failed!\n");
+			 else
+			 	dev_err(dp->dev, "LT EQ completed\n");
 			break;
 		case FINISHED:
 			training_finished = 1;
@@ -658,6 +684,7 @@ static int analogix_dp_set_link_train(struct analogix_dp_device *dp,
 	for (i = 0; i < DP_TIMEOUT_LOOP_COUNT; i++) {
 		analogix_dp_init_training(dp, count, bwtype);
 		retval = analogix_dp_sw_link_training(dp);
+		dev_err(dp->dev, "retval value after link training is %d\n", retval);
 		if (retval == 0)
 			break;
 
@@ -1098,6 +1125,7 @@ static void analogix_dp_bridge_mode_set(struct drm_bridge *bridge,
 	else
 		video->color_space = COLOR_RGB;
 
+
 	/*
 	 * NOTE: those property parsing code is used for providing backward
 	 * compatibility for samsung platform.
@@ -1119,6 +1147,9 @@ static void analogix_dp_bridge_mode_set(struct drm_bridge *bridge,
 		video->v_sync_polarity = true;
 	if (of_property_read_bool(dp_node, "interlaced"))
 		video->interlaced = true;
+
+	dev_err(dp->dev, "video->color_depth is: %d", video->color_depth);
+	dev_err(dp->dev, "video->color_space is: %d", video->color_space);
 }
 
 static void analogix_dp_bridge_nop(struct drm_bridge *bridge)
