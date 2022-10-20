@@ -148,7 +148,7 @@
 		default-brightness-level = <200>;
 	};
 
-	edp_panel: edp-panel {
+	/* edp_panel: edp-panel {
 		compatible = "simple-panel";
 		backlight = <&backlight>;
 		ddc-i2c-bus = <&i2c1>;
@@ -161,6 +161,30 @@
 		ports {
 			panel_in_edp: endpoint {
 				remote-endpoint = <&edp_out_panel>;
+			};
+		};
+	}; */
+
+	lt7911: lt7911d {
+		compatible = "lt,lt7911";
+		vdd-supply = <&vcc3v3_sys>;
+		ddc-i2c-bus = <&i2c7>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lt7911_rst>;
+		reset-gpios = <&gpio3 30 GPIO_ACTIVE_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				bridge_in_edp: endpoint {
+					remote-endpoint = <&edp_out_bridge>;
+				};
 			};
 		};
 	};
@@ -397,9 +421,9 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			edp_out_panel: endpoint@0 {
+			edp_out_bridge: endpoint@0 {
 				reg = <0>;
-				remote-endpoint = <&panel_in_edp>;
+				remote-endpoint = <&bridge_in_edp>;
 			};
 		};
 	};
@@ -1047,6 +1071,12 @@
 };
 
 &pinctrl {
+	lt7911d {
+		lt7911_rst: lt7911-rst {
+			rockchip,pins = <3 30 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+	};
+
 	panel {
 		lt7911d_reset: lt7911d-reset {
 			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
