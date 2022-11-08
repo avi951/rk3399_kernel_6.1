@@ -188,13 +188,13 @@
 	};
 
 	edp_panel: edp-panel {
-		compatible = "lontium,lt7911";
+		compatible = "simple-panel";
 		backlight = <&backlight>;
 		ddc-i2c-bus = <&i2c7>;
 		power-supply = <&vcc3v3_sys>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&lt7911d_reset>;
-		reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 
 		ports {
@@ -1062,11 +1062,11 @@
 		};
 	};
 
-	panel {
+	/*panel {
 		lt7911d_reset: lt7911d-reset {
-			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_output_low>;
 		};
-	};
+	};*/
 
 	sdio-pwrseq {
 		wifi_enable_h: wifi-enable-h {
@@ -1317,6 +1317,11 @@
 				reg = <0>;
 				remote-endpoint = <&bridge_in_edp>;
 			};
+
+			/*edp_out_panel: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&panel_in_edp>;
+			};*/
 		};
 	};
 };
