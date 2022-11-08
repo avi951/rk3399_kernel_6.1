@@ -61,6 +61,8 @@ static void rockchip_drm_fb_destroy(struct drm_framebuffer *fb)
 	struct drm_gem_object *obj;
 	int i;
 
+	printk("destorying rockchip_drm_framebuffer\n");
+
 	for (i = 0; i < ROCKCHIP_MAX_FB_BUFFER; i++) {
 		obj = rockchip_fb->obj[i];
 		if (obj)
@@ -119,7 +121,10 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
 		goto err_free_fb;
 	}
 
+	dev_err(dev->dev, "num_planes is: %d\n", num_planes);
+
 	if (obj) {
+		dev_err(dev->dev, "fb allocation for obj\n");
 		for (i = 0; i < num_planes; i++)
 			rockchip_fb->obj[i] = obj[i];
 
@@ -133,6 +138,7 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
 		}
 #ifndef MODULE
 	} else if (logo) {
+		dev_err(dev->dev, "fb allocation for the logo\n");
 		rockchip_fb->dma_addr[0] = logo->dma_addr;
 		rockchip_fb->kvaddr[0] = logo->kvaddr;
 		rockchip_fb->logo = logo;
@@ -170,6 +176,8 @@ rockchip_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
 	vsub = drm_format_vert_chroma_subsampling(mode_cmd->pixel_format);
 	num_planes = min(drm_format_num_planes(mode_cmd->pixel_format),
 			 ROCKCHIP_MAX_FB_BUFFER);
+
+	dev_err(dev->dev, "rockchip user fb create\n");
 
 	for (i = 0; i < num_planes; i++) {
 		unsigned int width = mode_cmd->width / (i ? hsub : 1);
@@ -352,7 +360,7 @@ static int rockchip_drm_atomic_commit(struct drm_device *dev,
 		 * TODO:
 		 * Just report bandwidth can't support now.
 		 */
-		DRM_ERROR("vop bandwidth too large %zd\n", bandwidth);
+		dev_err(dev->dev, "vop bandwidth too large %zd\n", bandwidth);
 	}
 
 	drm_atomic_helper_swap_state(dev, state);
@@ -395,6 +403,8 @@ rockchip_drm_framebuffer_init(struct drm_device *dev,
 			      struct drm_gem_object *obj)
 {
 	struct drm_framebuffer *fb;
+
+	dev_err(dev->dev, "doing rockchip_drm_framebuffer_init\n");
 
 	fb = rockchip_fb_alloc(dev, mode_cmd, &obj, NULL, 1);
 	if (IS_ERR(fb))

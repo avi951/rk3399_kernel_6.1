@@ -1,3 +1,4 @@
+#define pr_fmt(fmt) KBUILD_MODNAME " :" fmt
 /*
  * Copyright (C) 2015-2016 Free Electrons
  * Copyright (C) 2015-2016 NextThing Co
@@ -94,10 +95,11 @@ lt7911d_connector_detect(struct drm_connector *connector, bool force)
 	 * wire the DDC pins, or the I2C bus might not be working at
 	 * all.
 	 */
+
 	if (!IS_ERR(lt7911d->ddc) && drm_probe_ddc(lt7911d->ddc))
 		return connector_status_connected;
 
-	return connector_status_unknown;
+	return connector_status_connected;
 }
 
 static const struct drm_connector_funcs lt7911d_con_funcs = {

@@ -208,7 +208,6 @@ rockchip_dp_drm_encoder_atomic_check(struct drm_encoder *encoder,
 		s->bus_format = info->bus_formats[0];
 	else
 		s->bus_format = MEDIA_BUS_FMT_RGB888_1X24;
-	//s->bus_format = MEDIA_BUS_FMT_RGB888_1X24;
 	s->tv_state = &conn_state->tv;
 	s->eotf = TRADITIONAL_GAMMA_SDR;
 	s->color_space = V4L2_COLORSPACE_DEFAULT;
