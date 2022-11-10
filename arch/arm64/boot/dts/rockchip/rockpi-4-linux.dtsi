@@ -365,6 +365,12 @@
 	};
 };
 
+&cdn_dp {
+	status = "okay";
+	extcon = <&fusb0>;
+	phys = <&tcphy0_dp>;
+};
+
 &hdmi {
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -710,13 +716,12 @@
 };
 
 &i2c4 {
-	status = "disabled";
+	status = "okay";
 
-	fusb302@22 {
-		compatible = "fcs,fusb302";
+	fusb0: fusb30x@22 {
+		compatible = "fairchild,fusb302";
 		reg = <0x22>;
-		interrupt-parent = <&gpio1>;
-		interrupts = <RK_PA2 IRQ_TYPE_LEVEL_LOW>;
+		int-n-gpios = <&gpio1 RK_PA2 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&chg_cc_int_l>;
 		vbus-supply = <&vbus_typec>;
@@ -810,10 +815,13 @@
 };
 
 &tcphy0 {
+	extcon = <&fusb0>;
 	status = "okay";
 };
 
 &tcphy0_dp {
+	status = "okay";
+
 	port {
 		tcphy0_typec_dp: endpoint {
 			remote-endpoint = <&typec_dp>;
@@ -822,6 +830,8 @@
 };
 
 &tcphy0_usb3 {
+	status = "okay";
+
 	port {
 		tcphy0_typec_ss: endpoint {
 			remote-endpoint = <&typec_ss>;
@@ -846,7 +856,7 @@
 	status = "okay";
 	enable-active-high;
 	/* otg-vbus-gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;*/
-	gpio = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+	//gpio = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 
 	u2phy0_otg: otg-port {
 		phy-supply = <&vbus_typec>;
@@ -909,7 +919,7 @@
 };
 
 &usbdrd3_0 {
-	extcon = <&u2phy0>;
+	extcon = <&fusb0>;
 	status = "okay";
 };
 
@@ -1148,7 +1158,7 @@
 		};
 	};
 
-	fusb302 {
+	fusb30x {
 		chg_cc_int_l: chg-cc-int-l {
 			rockchip,pins = <1 2 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
@@ -1302,7 +1312,7 @@
 };
 
 &edp {
-	status = "okay";
+	status = "disabled";
 	vcc = "vcc1v8_s0";
 	force-hpd;
 	// /delete-node/ pinctrl-0;
@@ -1327,7 +1337,7 @@
 };
 
 &route_edp {
-	status = "okay";
+	status = "disabled";
 	connect = <&vopl_out_edp>;
 };
 
@@ -1353,4 +1363,12 @@
 
 &vopb {
 	status = "okay";
+};
+
+&dp_in_vopb {
+	status = "okay";
+};
+
+&dp_in_vopl {
+	status = "disabled";
 };

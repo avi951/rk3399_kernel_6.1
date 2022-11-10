@@ -284,7 +284,7 @@ static int panel_lt7911_probe(struct device *dev)
 		return err;
 	}
 
-	panel->reset_gpio = devm_gpiod_get_optional(dev, "reset", 0);
+	panel->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(panel->reset_gpio)) {
 		err = PTR_ERR(panel->reset_gpio);
 		dev_err(dev, "failed to request reset GPIO: %d\n", err);
