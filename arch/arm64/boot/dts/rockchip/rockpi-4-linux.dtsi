@@ -771,6 +771,27 @@
 
 &i2c7 {
 	status = "okay";
+
+	camera1: camera-module@10 {
+		status = "okay";
+		compatible = "sony,imx219";
+		reg = <0x10>;
+		clocks = <&cru SCLK_CIF_OUT>;
+		clock-names = "clk_cif_out";
+		pinctrl-names = "rockchip,camera_default";
+		pwdn-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		rockchip,camera-module-name = "default";
+		rockchip,camera-module-lens-name = "default";
+
+		port {
+			ucam_out1: endpoint {
+				remote-endpoint = <&mipi_in_ucam1>;
+				data-lanes = <1 2 3 4>;
+			};
+		};
+	};
 };
 
 &cpu_l0 {
@@ -1236,6 +1257,19 @@
 	};
 };
 
+&rkisp1_1 {
+	status = "okay";
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		isp1_mipi_in: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&dphy_tx1rx1_out>;
+		};
+	};
+};
+
 &mipi_dphy_rx0 {
 	status = "okay";
 
@@ -1251,6 +1285,37 @@
 			dphy_rx0_out: endpoint@0 {
 				reg = <0>;
 				remote-endpoint = <&isp0_mipi_in>;
+			};
+		};
+	};
+};
+
+&mipi_dphy_tx1rx1 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mipi_in_ucam1: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&ucam_out1>;
+				data-lanes = <1 2 3 4>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			dphy_tx1rx1_out: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&isp1_mipi_in>;
 			};
 		};
 	};
