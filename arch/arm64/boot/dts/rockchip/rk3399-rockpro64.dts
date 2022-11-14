@@ -265,8 +265,13 @@
 	};
 
 	backlight: lcd-backlight {
+		status = "okay";
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 25000 0>;
+		power-supply = <&dc_12v>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&backlight_en>;
+		enable-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
 		brightness-levels = <
 			  0   1   2   3   4   5   6   7
 			  8   9  10  11  12  13  14  15
@@ -301,10 +306,10 @@
 			240 241 242 243 244 245 246 247
 			248 249 250 251 252 253 254 255>;
 		default-brightness-level = <200>;
-		status = "disabled";
 	};
 
 	edp_panel: edp-panel {
+		status = "okay";
 		compatible = "simple-panel";
 		backlight = <&backlight>;
 		power-supply = <&vcc3v3_s0>;
@@ -313,7 +318,6 @@
 		enable-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
 		prepare-delay-ms = <20>;
 		enable-delay-ms = <20>;
-		status = "disabled";
 
 		ports {
 			panel_in_edp: endpoint {
@@ -324,7 +328,7 @@
 };
 
 &cdn_dp {
-	status = "okay";
+	status = "disabled";
 	extcon = <&fusb0>;
 };
 
@@ -456,9 +460,9 @@
 		dsi,lanes = <4>;
 
 		delay,enable = <100>;
-		
+
 		prepare-delay-ms = <200>;
-		
+
 		panel-init-sequence = [
 			15 00 02 80 58
 			15 00 02 81 47
@@ -492,9 +496,10 @@
 };
 
 &edp {
-	status = "disabled";
-	pinctrl-names = "default";
-	pinctrl-0 = <&edp_hpd>;
+	force-hpd;
+	status = "okay";
+	// pinctrl-names = "default";
+	// pinctrl-0 = <&edp_hpd>;
 
 	ports {
 		edp_out: port@1 {
@@ -502,8 +507,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			edp_out_panel: endpoint@0 {
-				reg = <0>;
+			edp_out_panel: endpoint {
 				remote-endpoint = <&panel_in_edp>;
 			};
 		};
@@ -1185,6 +1189,12 @@
 	buttons {
 		pwrbtn: pwrbtn {
 			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	backlight {
+		backlight_en: backlight-en {
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
