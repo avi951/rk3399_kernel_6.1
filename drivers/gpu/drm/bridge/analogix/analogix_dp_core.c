@@ -486,12 +486,12 @@ static int analogix_dp_process_equalizer_training(struct analogix_dp_device *dp)
 
 		analogix_dp_get_link_bandwidth(dp, &reg);
 		dp->link_train.link_rate = reg;
-		dev_dbg(dp->dev, "final bandwidth = %.2x\n",
+		dev_err(dp->dev, "final bandwidth = %.2x\n",
 			dp->link_train.link_rate);
 
 		analogix_dp_get_lane_count(dp, &reg);
 		dp->link_train.lane_count = reg;
-		dev_dbg(dp->dev, "final lane count = %.2x\n",
+		dev_err(dp->dev, "final lane count = %.2x\n",
 			dp->link_train.lane_count);
 
 		/* set enhanced mode if available */

@@ -10,6 +10,7 @@
 #include <dt-bindings/display/drm_mipi_dsi.h>
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
+#include "rk3399-linux.dtsi"
 #include "rk3399-vop-clk-set.dtsi"
 
 / {
@@ -230,7 +231,7 @@
 	};
 
 	hdmi-sound {
-		status = "okay";
+		status = "disabled";
 		compatible = "rockchip,rk3399-hdmi-dp";
 		rockchip,cpu = <&i2s2>;
 		rockchip,codec = <&hdmi>, <&cdn_dp>;
@@ -269,9 +270,9 @@
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 25000 0>;
 		power-supply = <&dc_12v>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&backlight_en>;
-		enable-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&backlight_en>;
+		//enable-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
 		brightness-levels = <
 			  0   1   2   3   4   5   6   7
 			  8   9  10  11  12  13  14  15
@@ -310,9 +311,9 @@
 
 	edp_panel: edp-panel {
 		status = "okay";
-		compatible = "simple-panel";
+		compatible = "boe,nt156whm-n42";
 		backlight = <&backlight>;
-		power-supply = <&vcc3v3_s0>;
+		power-supply = <&vcc3v3_sys>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&edp_panel_en>;
 		enable-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
@@ -402,14 +403,6 @@
 	status = "okay";
 };
 
-&display_subsystem {
-	/delete-property/ devfreq;
-	status = "okay";
-
-	ports = <&vopb_out>, <&vopl_out>;
-	logo-memory-region = <&drm_logo>;
-};
-
 &dmc {
 	status = "okay";
 	center-supply = <&vdd_center>;
@@ -452,7 +445,7 @@
 	panel@0 {
 		compatible = "simple-panel-dsi";
 		reg = <0>;
-		backlight = <&backlight>;
+		//backlight = <&backlight>;
 		power-supply = <&vcc3v3_s0>;
 
 		dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST)>;
@@ -496,10 +489,10 @@
 };
 
 &edp {
-	force-hpd;
 	status = "okay";
-	// pinctrl-names = "default";
-	// pinctrl-0 = <&edp_hpd>;
+	vcc = "vcc1v8_s0";
+	force-hpd;
+	// /delete-node/ pinctrl-0;
 
 	ports {
 		edp_out: port@1 {
@@ -857,7 +850,7 @@
 };
 
 &hdmi {
-	status = "okay";
+	status = "disabled";
 	rockchip,phy-table =
 		<74250000 0x8009 0x0004 0x0272>,
 		<165000000 0x802b 0x0004 0x0209>,
@@ -1067,7 +1060,7 @@
 };
 
 &pwm0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &pwm1 {
@@ -1192,15 +1185,15 @@
 		};
 	};
 
-	backlight {
+	/*backlight {
 		backlight_en: backlight-en {
-			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_output_high>;
 		};
-	};
+	};*/
 
 	lcd_panel {
 		edp_panel_en: edp-panel-en {
-			rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_output_high>;
 		};
 	};
 
@@ -1349,10 +1342,26 @@
 	status = "okay";
 };
 
+&display_subsystem {
+	/delete-property/ devfreq;
+	status = "okay";
+
+	ports = <&vopb_out>, <&vopl_out>;
+	logo-memory-region = <&drm_logo>;
+
+	route {
+		route_hdmi: route-hdmi {
+			status = "disabled";
+		};
+
+		route_edp: route-edp {
+			status = "okay";
+		};
+	};
+};
+
 &vopl {
 	status = "okay";
-	assigned-clocks = <&cru DCLK_VOP1_DIV>;
-	assigned-clock-parents = <&cru PLL_CPLL>;
 };
 
 &vopb_mmu {
@@ -1361,10 +1370,16 @@
 
 &vopb {
 	status = "okay";
-	assigned-clocks = <&cru DCLK_VOP0_DIV>;
-	assigned-clock-parents = <&cru PLL_VPLL>;
 };
 
 &vopb_mmu {
 	status = "okay";
+};
+
+&vopl_out_hdmi {
+	status = "disabled";
+};
+
+&vopb_out_hdmi {
+	status = "disabled";
 };

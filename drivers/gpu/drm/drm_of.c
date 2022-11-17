@@ -22,11 +22,14 @@ static uint32_t drm_crtc_port_mask(struct drm_device *dev,
 	struct drm_crtc *tmp;
 
 	drm_for_each_crtc(tmp, dev) {
+		dev_err(dev->dev, "value of index is: %d\n", index);
 		if (tmp->port == port)
 			return 1 << index;
 
 		index++;
 	}
+
+	dev_err(dev->dev, "returning 0\n");
 
 	return 0;
 }
@@ -54,13 +57,20 @@ uint32_t drm_of_find_possible_crtcs(struct drm_device *dev,
 			continue;
 		}
 
+		dev_err(dev->dev, "ep is: %s\n", ep->full_name);
+
 		remote_port = of_graph_get_remote_port(ep);
 		if (!remote_port) {
 			of_node_put(ep);
 			return 0;
 		}
 
+		dev_err(dev->dev, "remote port is: %s\n", remote_port->full_name);
+		dev_err(dev->dev, "possible crtcs value is: %d\n", possible_crtcs);
+
 		possible_crtcs |= drm_crtc_port_mask(dev, remote_port);
+
+		dev_err(dev->dev, "possible crtcs value aftre checking is: %d\n", possible_crtcs);
 
 		of_node_put(remote_port);
 	}

@@ -421,6 +421,8 @@ static int panel_simple_get_fixed_modes(struct panel_simple *panel)
 	struct drm_display_mode *mode;
 	unsigned int i, num = 0;
 
+	dev_err(drm->dev, "getting fixed modes\n");
+
 	if (!panel->desc)
 		return 0;
 
@@ -476,6 +478,8 @@ static int panel_simple_of_get_native_mode(struct panel_simple *panel)
 	struct drm_display_mode *mode;
 	struct device_node *timings_np;
 	int ret;
+
+	dev_err(drm->dev, "getting native modes\n");
 
 	timings_np = of_get_child_by_name(panel->dev->of_node,
 					  "display-timings");
@@ -842,10 +846,13 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 		return err;
 	}
 	panel->supply = devm_regulator_get(dev, "power");
-	if (IS_ERR(panel->supply))
-		return PTR_ERR(panel->supply);
+	if (IS_ERR(panel->supply)) {
+		err = PTR_ERR(panel->supply);
+		dev_err(dev, "failed to get power regulator: %d\n", err);
+		return err;
+	}
 
-	panel->enable_gpio = devm_gpiod_get_optional(dev, "enable", 0);
+	panel->enable_gpio = devm_gpiod_get_optional(dev, "enable", 1);
 	if (IS_ERR(panel->enable_gpio)) {
 		err = PTR_ERR(panel->enable_gpio);
 		dev_err(dev, "failed to request enable GPIO: %d\n", err);
@@ -918,8 +925,11 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 		panel->backlight = of_find_backlight_by_node(backlight);
 		of_node_put(backlight);
 
-		if (!panel->backlight)
-			return -EPROBE_DEFER;
+		if (!panel->backlight) {
+			err = -EPROBE_DEFER;
+			dev_err(dev, "failed to find backlight: %d\n", err);
+			// return err;
+		}
 	}
 
 	ddc = of_parse_phandle(dev->of_node, "ddc-i2c-bus", 0);
@@ -929,6 +939,7 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 
 		if (!panel->ddc) {
 			err = -EPROBE_DEFER;
+			dev_err(dev, "failed to find ddc-i2c-bus: %d\n", err);
 			goto free_backlight;
 		}
 	}
@@ -943,12 +954,16 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 
 	dev_set_drvdata(dev, panel);
 
+	dev_err(dev, "hurray simple-panle probed!!!!!\n");
+
 	return 0;
 
 free_ddc:
+	dev_err(dev, "error in drm_panel_add\n");
 	if (panel->ddc)
 		put_device(&panel->ddc->dev);
 free_backlight:
+	dev_err(dev, "error in ddc-bus find\n");
 	if (panel->backlight)
 		put_device(&panel->backlight->dev);
 
@@ -1313,6 +1328,34 @@ static const struct panel_desc boe_nv125fhm_n73 = {
 	.size = {
 		.width = 276,
 		.height = 156,
+	},
+	.delay = {
+		.unprepare = 160,
+	},
+	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
+};
+/////////////////////////
+static const struct drm_display_mode boe_nt156whm_n42_mode = {
+	.clock = 72300,
+	.hdisplay = 1366,
+	.hsync_start = 1366 + 48,
+	.hsync_end = 1366 + 48 + 32,
+	.htotal = 1366 + 48 + 32 + 80,
+	.vdisplay = 768,
+	.vsync_start = 768 + 3,
+	.vsync_end = 768 + 3 + 6,
+	.vtotal = 768 + 3 + 6 + 13,
+	.vrefresh = 60,
+	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
+};
+
+static const struct panel_desc boe_nt156whm_n42 = {
+	.modes = &boe_nt156whm_n42_mode,
+	.num_modes = 1,
+	.bpc = 6,
+	.size = {
+		.width = 344,
+		.height = 194,
 	},
 	.delay = {
 		.unprepare = 160,
@@ -2098,6 +2141,9 @@ static const struct of_device_id platform_of_match[] = {
 	}, {
 		.compatible = "boe,nv125fhm-n73",
 		.data = &boe_nv125fhm_n73,
+	}, {
+		.compatible = "boe,nt156whm-n42",
+		.data = &boe_nt156whm_n42,
 	}, {
 		.compatible = "chunghwa,claa070wp03xg",
 		.data = &chunghwa_claa070wp03xg,
