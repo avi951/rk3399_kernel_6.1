@@ -705,7 +705,7 @@ static int es8316_pcm_startup(struct snd_pcm_substream *substream,
 				    ES8316_GPIO_SEL_REG4D,0x02,0x2);
 
 		snd_soc_update_bits(codec,
-				    ES8316_ADC_PDN_LINSEL_REG22, 0xC0, 0x20);
+				    ES8316_ADC_PDN_LINSEL_REG22, 0xF0, 0x30);
 		snd_soc_update_bits(codec, ES8316_CLKMGR_CLKSW_REG01,
 				    ES8316_CLKMGR_ADC_MCLK_MASK |
 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
@@ -743,7 +743,7 @@ static void es8316_pcm_shutdown(struct snd_pcm_substream *substream,
 		snd_soc_update_bits(codec,
 				    ES8316_GPIO_SEL_REG4D,0x02,0x0);
 
-		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xc0);
+		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 		snd_soc_update_bits(codec, ES8316_CLKMGR_CLKSW_REG01,
 				    ES8316_CLKMGR_ADC_MCLK_MASK |
 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
@@ -847,7 +847,7 @@ static int es8316_set_bias_level(struct snd_soc_codec *codec,
 		snd_soc_write(codec, ES8316_HPMIX_SWITCH_REG14, 0x00);
 		snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
 		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0x00);
-		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
+		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 		if (!es8316->hp_inserted)
 			snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x3F);
 		snd_soc_write(codec, ES8316_SYS_LP1_REG0E, 0x3F);
@@ -913,7 +913,7 @@ static int es8316_init_regs(struct snd_soc_codec *codec)
 	snd_soc_write(codec, ES8316_CAL_HPLIV_REG1E, 0x90);
 	snd_soc_write(codec, ES8316_CAL_HPRIV_REG1F, 0x90);
 	snd_soc_write(codec, ES8316_ADC_VOLUME_REG27, 0x00);
-	snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xc0);
+	snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 	snd_soc_write(codec, ES8316_ADC_D2SEPGA_REG24, 0x00);
 	snd_soc_write(codec, ES8316_ADC_DMIC_REG25, 0x08);
 	snd_soc_write(codec, ES8316_DAC_SET2_REG31, 0x20);
@@ -988,7 +988,7 @@ static int es8316_resume(struct snd_soc_codec *codec)
 		snd_soc_write(codec, ES8316_SYS_LP1_REG0E, 0xFF);
 		snd_soc_write(codec, ES8316_SYS_LP2_REG0F, 0xFF);
 		snd_soc_write(codec, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
-		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xc0);
+		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 	}
 	return 0;
 }
@@ -1090,7 +1090,7 @@ static int es8316_probe(struct snd_soc_codec *codec)
 			snd_soc_write(codec, ES8316_SYS_LP2_REG0F, 0xFF);
 			snd_soc_write(codec, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
 			snd_soc_write(codec,
-				      ES8316_ADC_PDN_LINSEL_REG22, 0xc0);
+				      ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 		}
 	}
 

@@ -64,6 +64,15 @@
 		pinctrl-0 = <&uart2c_xfer>;
 	};
 
+	dc_12v: dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
 	vcc1v8_s0: vcc1v8-s0 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc1v8_s0";
@@ -212,6 +221,7 @@
 	};
 
 	es8316-sound {
+		status = "okay";
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,name = "rockchip,es8316-codec";
@@ -233,7 +243,7 @@
 	};
 
 	hdmi_codec: hdmi-codec {
-		status = "disabled";
+		status = "okay";
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,mclk-fs = <256>;
@@ -249,11 +259,11 @@
 	};
 
 	sound_ext_card: sound-ext-card {
-		status = "disabled";
+		status = "okay";
 	};
 
 	spdif-sound {
-		status = "disabled";
+		status = "okay";
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "ROCKCHIP,SPDIF";
 		simple-audio-card,cpu {
@@ -265,12 +275,13 @@
 	};
 
 	spdif_out: spdif-out {
-		status = "disabled";
+		status = "okay";
 		compatible = "linux,spdif-dit";
 		#sound-dai-cells = <0>;
 	};
 
 	sdio_pwrseq: sdio-pwrseq {
+		status = "okay";
 		compatible = "mmc-pwrseq-simple";
 		clocks = <&rk808 1>;
 		clock-names = "ext_clock";
@@ -366,7 +377,7 @@
 };
 
 &cdn_dp {
-	status = "okay";
+	status = "disabled";
 	extcon = <&fusb0>;
 	phys = <&tcphy0_dp>;
 };
@@ -387,7 +398,7 @@
 	cap-sd-highspeed;
 	disable-wp;
 	num-slots = <1>;
-//	sd-uhs-sdr104;
+	sd-uhs-sdr104;
 	vqmmc-supply = <&vcc_sd>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc_clk &sdmmc_cmd &sdmmc_cd &sdmmc_bus4>;
@@ -408,7 +419,7 @@
 	num-slots = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
-	// sd-uhs-sdr104;
+	sd-uhs-sdr104;
 	status = "okay";
 };
 
@@ -435,7 +446,7 @@
 };
 
 &i2s1 {
-	status = "disabled";
+	status = "okay";
 	#sound-dai-cells = <0>;
 };
 
@@ -683,6 +694,7 @@
 	i2c-scl-falling-time-ns = <15>;
 
 	es8316: es8316@11 {
+		status = "okay";
 		#sound-dai-cells = <0>;
 		compatible = "everest,es8316";
 		reg = <0x11>;
@@ -716,7 +728,7 @@
 };
 
 &i2c4 {
-	status = "okay";
+	status = "disabled";
 
 	fusb0: fusb30x@22 {
 		compatible = "fairchild,fusb302";
@@ -1377,7 +1389,7 @@
 };
 
 &edp {
-	status = "disabled";
+	status = "okay";
 	vcc = "vcc1v8_s0";
 	force-hpd;
 	// /delete-node/ pinctrl-0;
@@ -1402,7 +1414,7 @@
 };
 
 &route_edp {
-	status = "disabled";
+	status = "okay";
 	connect = <&vopl_out_edp>;
 };
 
