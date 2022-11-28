@@ -48,8 +48,8 @@ static const struct reg_default es8316_reg_defaults[] = {
 	{0x08, 0x00}, {0x09, 0x01}, {0x0a, 0x00}, {0x0b, 0x00},
 	{0x0c, 0xf8}, {0x0d, 0x3f}, {0x0e, 0x00}, {0x0f, 0x00},
 	{0x10, 0x01}, {0x11, 0xfc}, {0x12, 0x28}, {0x13, 0x00},
-	{0x14, 0x00}, {0x15, 0x33}, {0x16, 0x00}, {0x17, 0x00},
-	{0x18, 0x88}, {0x19, 0x06}, {0x1a, 0x22}, {0x1b, 0x03},
+	{0x14, 0x00}, {0x15, 0x33}, {0x16, 0xbb}, {0x17, 0x00},
+	{0x18, 0x33}, {0x19, 0x06}, {0x1a, 0x22}, {0x1b, 0x03},
 	{0x1c, 0x0f}, {0x1d, 0x00}, {0x1e, 0x80}, {0x1f, 0x80},
 	{0x20, 0x00}, {0x21, 0x00}, {0x22, 0xc0}, {0x23, 0x00},
 	{0x24, 0x01}, {0x25, 0x08}, {0x26, 0x10}, {0x27, 0xc0},
@@ -732,7 +732,7 @@ static void es8316_pcm_shutdown(struct snd_pcm_substream *substream,
 		snd_soc_write(codec, ES8316_CPHP_PDN1_REG19, 0x06);
 		snd_soc_write(codec, ES8316_HPMIX_SWITCH_REG14, 0x00);
 		snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
-		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0x00);
+		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0xBB);
 		snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x00);
 		snd_soc_write(codec, ES8316_SYS_LP1_REG0E, 0xFF);
 		snd_soc_write(codec, ES8316_SYS_LP2_REG0F, 0xFF);
@@ -846,7 +846,7 @@ static int es8316_set_bias_level(struct snd_soc_codec *codec,
 		snd_soc_write(codec, ES8316_CPHP_PDN1_REG19, 0x06);
 		snd_soc_write(codec, ES8316_HPMIX_SWITCH_REG14, 0x00);
 		snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
-		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0x00);
+		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0xBB);
 		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
 		if (!es8316->hp_inserted)
 			snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x3F);
@@ -935,7 +935,7 @@ static int es8316_init_regs(struct snd_soc_codec *codec)
 	snd_soc_write(codec, ES8316_CPHP_PDN2_REG1A, 0x10);
 	snd_soc_write(codec, ES8316_CPHP_LDOCTL_REG1B, 0x30);
 	snd_soc_write(codec, ES8316_CPHP_PDN1_REG19, 0x02);
-	snd_soc_write(codec, ES8316_CPHP_ICAL_VOL_REG18, 0x00);
+	snd_soc_write(codec, ES8316_CPHP_ICAL_VOL_REG18, 0x33);
 	snd_soc_write(codec, ES8316_GPIO_SEL_REG4D, 0x00);
 	snd_soc_write(codec, ES8316_GPIO_DEBUNCE_INT_REG4E, 0x02);
 	snd_soc_write(codec, ES8316_TESTMODE_REG50, 0xA0);
@@ -982,7 +982,7 @@ static int es8316_resume(struct snd_soc_codec *codec)
 		snd_soc_write(codec, ES8316_CPHP_PDN1_REG19, 0x06);
 		snd_soc_write(codec, ES8316_HPMIX_SWITCH_REG14, 0x00);
 		snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
-		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0x00);
+		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0xBB);
 		if (!es8316->hp_inserted)
 			snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x3F);
 		snd_soc_write(codec, ES8316_SYS_LP1_REG0E, 0xFF);
@@ -1082,7 +1082,7 @@ static int es8316_probe(struct snd_soc_codec *codec)
 			snd_soc_write(codec, ES8316_CPHP_PDN1_REG19, 0x06);
 			snd_soc_write(codec, ES8316_HPMIX_SWITCH_REG14, 0x00);
 			snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
-			snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0x00);
+			snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0xBB);
 			if (!es8316->hp_inserted)
 				snd_soc_write(codec, ES8316_SYS_PDN_REG0D,
 					      0x3F);
