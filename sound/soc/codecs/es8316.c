@@ -50,11 +50,11 @@ static const struct reg_default es8316_reg_defaults[] = {
 	{0x10, 0x01}, {0x11, 0xfc}, {0x12, 0x28}, {0x13, 0x00},
 	{0x14, 0x00}, {0x15, 0x33}, {0x16, 0xbb}, {0x17, 0x00},
 	{0x18, 0x33}, {0x19, 0x06}, {0x1a, 0x22}, {0x1b, 0x03},
-	{0x1c, 0x0f}, {0x1d, 0x00}, {0x1e, 0x80}, {0x1f, 0x80},
+	{0x1c, 0x0f}, {0x1d, 0x30}, {0x1e, 0x80}, {0x1f, 0x80},
 	{0x20, 0x00}, {0x21, 0x00}, {0x22, 0xc0}, {0x23, 0x00},
 	{0x24, 0x01}, {0x25, 0x08}, {0x26, 0x10}, {0x27, 0xc0},
 	{0x28, 0x00}, {0x29, 0x1c}, {0x2a, 0x00}, {0x2b, 0xb0},
-	{0x2c, 0x32}, {0x2d, 0x03}, {0x2e, 0x00}, {0x2f, 0x11},
+	{0x2c, 0x32}, {0x2d, 0x03}, {0x2e, 0x20}, {0x2f, 0x11},
 	{0x30, 0x10}, {0x31, 0x00}, {0x32, 0x00}, {0x33, 0xc0},
 	{0x34, 0xc0}, {0x35, 0x1f}, {0x36, 0xf7}, {0x37, 0xfd},
 	{0x38, 0xff}, {0x39, 0x1f}, {0x3a, 0xf7}, {0x3b, 0xfd},
@@ -711,6 +711,12 @@ static int es8316_pcm_startup(struct snd_pcm_substream *substream,
 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
 				    ES8316_CLKMGR_ADC_MCLK_EN |
 				    ES8316_CLKMGR_ADC_ANALOG_EN);
+		snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
+		snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
+		snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+		snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+		snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+		snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
 	}
 
 	return 0;
@@ -749,6 +755,12 @@ static void es8316_pcm_shutdown(struct snd_pcm_substream *substream,
 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
 				    ES8316_CLKMGR_ADC_MCLK_DIS |
 				    ES8316_CLKMGR_ADC_ANALOG_DIS);
+		snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
+		snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
+		snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+		snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+		snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+		snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
 	}
 
 	if (--es8316->pwr_count == 0) {
@@ -818,6 +830,14 @@ static int es8316_set_bias_level(struct snd_soc_codec *codec,
 	struct es8316_priv *es8316 = snd_soc_codec_get_drvdata(codec);
 	int ret;
 
+	snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
+	snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+	snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+	snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+	snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
+	snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
+
+
 	switch (level) {
 	case SND_SOC_BIAS_ON:
 		break;
@@ -848,6 +868,7 @@ static int es8316_set_bias_level(struct snd_soc_codec *codec,
 		snd_soc_write(codec, ES8316_HPMIX_PDN_REG15, 0x33);
 		snd_soc_write(codec, ES8316_HPMIX_VOL_REG16, 0xBB);
 		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
+		snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
 		if (!es8316->hp_inserted)
 			snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x3F);
 		snd_soc_write(codec, ES8316_SYS_LP1_REG0E, 0x3F);
@@ -944,16 +965,16 @@ static int es8316_init_regs(struct snd_soc_codec *codec)
 	snd_soc_write(codec, ES8316_SYS_PDN_REG0D, 0x00);
 	snd_soc_write(codec, ES8316_RESET_REG00, 0xC0);
 	msleep(50);
-	snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x60);
+	snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
 	snd_soc_write(codec, ES8316_ADC_D2SEPGA_REG24, 0x01);
 	/* adc ds mode, HPF enable */
 	snd_soc_write(codec, ES8316_ADC_DMIC_REG25, 0x08);
-	snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xcd);
-	snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x08);
-	snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0xa0);
-	snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0x05);
+	snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+	snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+	snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+	snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
 	snd_soc_write(codec, ES8316_ADC_ALC5_REG2D, 0x06);
-	snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x61);
+	snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
 	return 0;
 }
 
@@ -989,6 +1010,12 @@ static int es8316_resume(struct snd_soc_codec *codec)
 		snd_soc_write(codec, ES8316_SYS_LP2_REG0F, 0xFF);
 		snd_soc_write(codec, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
 		snd_soc_write(codec, ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
+		snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+		snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+		snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+		snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
+		snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
+		snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
 	}
 	return 0;
 }
@@ -1091,8 +1118,15 @@ static int es8316_probe(struct snd_soc_codec *codec)
 			snd_soc_write(codec, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
 			snd_soc_write(codec,
 				      ES8316_ADC_PDN_LINSEL_REG22, 0xf0);
+			snd_soc_write(codec, ES8316_ADC_ALC6_REG2E, 0x20);
+			snd_soc_write(codec, ES8316_ADC_ALC1_REG29, 0xc0);
+			snd_soc_write(codec, ES8316_ADC_ALC2_REG2A, 0x1a);
+			snd_soc_write(codec, ES8316_ADC_ALC3_REG2B, 0x8a);
+			snd_soc_write(codec, ES8316_ADC_ALC4_REG2C, 0xa5);
 		}
 	}
+
+	snd_soc_write(codec, ES8316_ADC_PGAGAIN_REG23, 0x00);
 
 	return ret;
 }
