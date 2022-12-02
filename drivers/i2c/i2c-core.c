@@ -1474,12 +1474,17 @@ struct i2c_adapter *of_find_i2c_adapter_by_node(struct device_node *node)
 	struct i2c_adapter *adapter;
 
 	dev = bus_find_device(&i2c_bus_type, NULL, node, of_dev_node_match);
-	if (!dev)
+	if (!dev) {
+		dev_info(dev, "No i2c device found for device\n");
+		printk("No i2c device found for device\n");
 		return NULL;
+	}
 
 	adapter = i2c_verify_adapter(dev);
-	if (!adapter)
+	if (!adapter) {
+		printk("Found device but its not adapter\n");
 		put_device(dev);
+	}
 
 	return adapter;
 }
@@ -2623,8 +2628,10 @@ struct i2c_adapter *i2c_get_adapter(int nr)
 
 	mutex_lock(&core_lock);
 	adapter = idr_find(&i2c_adapter_idr, nr);
-	if (!adapter)
+	if (!adapter) {
+		printk(KERN_INFO "No idr_find");
 		goto exit;
+	}
 
 	if (try_module_get(adapter->owner))
 		get_device(&adapter->dev);

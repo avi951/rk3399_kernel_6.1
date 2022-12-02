@@ -1,3 +1,4 @@
+#define pr_fmt(fmt) KBUILD_MODNAME " : drm_frame :" fmt
 /*
  * Copyright (c) 2006-2008 Intel Corporation
  * Copyright (c) 2007 Dave Airlie <airlied@linux.ie>
@@ -228,12 +229,18 @@ void drm_connector_ida_destroy(void)
  */
 const char *drm_get_connector_status_name(enum drm_connector_status status)
 {
-	if (status == connector_status_connected)
+	if (status == connector_status_connected) {
+		pr_err("connector status is CONNECTED\n");
 		return "connected";
-	else if (status == connector_status_disconnected)
+	}
+	else if (status == connector_status_disconnected) {
+		pr_err("connector status is DISCONNECTED\n");
 		return "disconnected";
-	else
+	}
+	else {
+		pr_err("connector status is UNKNOWN\n");
 		return "unknown";
+	}
 }
 EXPORT_SYMBOL(drm_get_connector_status_name);
 
@@ -426,14 +433,24 @@ int drm_framebuffer_init(struct drm_device *dev, struct drm_framebuffer *fb,
 	fb->dev = dev;
 	fb->funcs = funcs;
 
+	pr_err("drm_device is: %s", dev->dev->of_node->full_name);
+
+	pr_err("starting framebuffer initializing\n");
+
+	pr_err("framebuffer mode object is: %d\n", fb->base.id);
+
 	ret = drm_mode_object_get(dev, &fb->base, DRM_MODE_OBJECT_FB);
 	if (ret)
 		goto out;
+
+	pr_err("got the drm_mode_object_get\n");
 
 	dev->mode_config.num_fb++;
 	list_add(&fb->head, &dev->mode_config.fb_list);
 out:
 	mutex_unlock(&dev->mode_config.fb_lock);
+
+	pr_err("done with initializing of framebuffer\n");
 
 	return ret;
 }
@@ -501,11 +518,17 @@ struct drm_framebuffer *drm_framebuffer_lookup(struct drm_device *dev,
 {
 	struct drm_framebuffer *fb;
 
+	pr_err("framebuffer id is: %d\n", id);
+
 	mutex_lock(&dev->mode_config.fb_lock);
 	fb = __drm_framebuffer_lookup(dev, id);
 	if (fb) {
 		if (!kref_get_unless_zero(&fb->refcount))
 			fb = NULL;
+	}
+	if(fb == NULL)
+	{
+		pr_err("fb is NULL\n");
 	}
 	mutex_unlock(&dev->mode_config.fb_lock);
 
@@ -521,7 +544,7 @@ EXPORT_SYMBOL(drm_framebuffer_lookup);
  */
 void drm_framebuffer_unreference(struct drm_framebuffer *fb)
 {
-	DRM_DEBUG("%p: FB ID: %d (%d)\n", fb, fb->base.id, atomic_read(&fb->refcount.refcount));
+	//pr_err("UnReference %p: FB ID: %d (%d)\n", fb, fb->base.id, atomic_read(&fb->refcount.refcount));
 	kref_put(&fb->refcount, drm_framebuffer_free);
 }
 EXPORT_SYMBOL(drm_framebuffer_unreference);
@@ -534,7 +557,7 @@ EXPORT_SYMBOL(drm_framebuffer_unreference);
  */
 void drm_framebuffer_reference(struct drm_framebuffer *fb)
 {
-	DRM_DEBUG("%p: FB ID: %d (%d)\n", fb, fb->base.id, atomic_read(&fb->refcount.refcount));
+	//pr_err("Reference %p: FB ID: %d (%d)\n", fb, fb->base.id, atomic_read(&fb->refcount.refcount));
 	kref_get(&fb->refcount);
 }
 EXPORT_SYMBOL(drm_framebuffer_reference);
@@ -615,6 +638,8 @@ void drm_framebuffer_remove(struct drm_framebuffer *fb)
 	if (!fb)
 		return;
 
+	pr_err("removing framebuffer\n");
+
 	dev = fb->dev;
 
 	WARN_ON(!list_empty(&fb->filp_head));
@@ -645,7 +670,7 @@ void drm_framebuffer_remove(struct drm_framebuffer *fb)
 				set.fb = NULL;
 				ret = drm_mode_set_config_internal(&set);
 				if (ret)
-					DRM_ERROR("failed to reset crtc %p when fb was deleted\n", crtc);
+					pr_err("failed to reset crtc %p when fb was deleted\n", crtc);
 			}
 		}
 
@@ -808,6 +833,7 @@ EXPORT_SYMBOL(drm_crtc_index);
 static void drm_mode_remove(struct drm_connector *connector,
 			    struct drm_display_mode *mode)
 {
+	pr_err("drm_display_mode is: %s\n", mode->name);
 	list_del(&mode->head);
 	drm_mode_destroy(connector->dev, mode);
 }
@@ -885,11 +911,11 @@ static void drm_connector_get_cmdline_mode(struct drm_connector *connector)
 			break;
 		}
 
-		DRM_INFO("forcing %s connector %s\n", connector->name, s);
+		pr_err("forcing %s connector %s\n", connector->name, s);
 		connector->force = mode->force;
 	}
 
-	DRM_DEBUG_KMS("cmdline mode for connector %s %dx%d@%dHz%s%s%s\n",
+	pr_err("cmdline mode for connector %s %dx%d@%dHz%s%s%s\n",
 		      connector->name,
 		      mode->xres, mode->yres,
 		      mode->refresh_specified ? mode->refresh : 60,
@@ -920,6 +946,11 @@ int drm_connector_init(struct drm_device *dev,
 	int ret;
 	struct ida *connector_ida =
 		&drm_connector_enum_list[connector_type].ida;
+
+	pr_err("drm_connector_init\n");
+
+	pr_err("connector name is: %s\n", connector->name);
+	pr_err("connector name is: %d\n", connector_type);
 
 	drm_modeset_lock_all(dev);
 
@@ -1208,6 +1239,8 @@ int drm_encoder_init(struct drm_device *dev,
 		      int encoder_type, const char *name, ...)
 {
 	int ret;
+
+	pr_err("encoder name is: %s\n", encoder->name);
 
 	drm_modeset_lock_all(dev);
 

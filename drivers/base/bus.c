@@ -342,8 +342,10 @@ struct device *bus_find_device(struct bus_type *bus,
 	struct klist_iter i;
 	struct device *dev;
 
-	if (!bus || !bus->p)
+	if (!bus || !bus->p) {
+		dev_info(dev,"No bus found\n");
 		return NULL;
+	}
 
 	klist_iter_init_node(&bus->p->klist_devices, &i,
 			     (start ? &start->p->knode_bus : NULL));

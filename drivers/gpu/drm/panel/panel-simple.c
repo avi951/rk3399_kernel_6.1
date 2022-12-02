@@ -924,7 +924,7 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 		if (!panel->backlight) {
 			err = -EPROBE_DEFER;
 			dev_err(dev, "failed to find backlight: %d\n", err);
-			return err;
+			// return err;
 		}
 	}
 

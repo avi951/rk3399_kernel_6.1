@@ -27,6 +27,7 @@
 #include <drm/drm_crtc.h>
 
 #include "drm/drmP.h"
+// #include "rockchip/lt7911d.h"
 
 /**
  * DOC: overview
@@ -316,10 +317,16 @@ EXPORT_SYMBOL(drm_bridge_enable);
 struct drm_bridge *of_drm_find_bridge(struct device_node *np)
 {
 	struct drm_bridge *bridge;
+	printk(KERN_INFO "Device: %s\n", np->name);
+	/*for (bridge = bridge_list; bridge != NULL; bridge = bridge->list.le_next) {
+		printk(KERN_INFO "Bridge: %s\n", bridge->of_node->name);
+		bridge = bridge->list->next;
+	}*/
 
 	mutex_lock(&bridge_lock);
 
 	list_for_each_entry(bridge, &bridge_list, list) {
+		printk(KERN_INFO "Bridges: %s\n", bridge->of_node->name);
 		if (bridge->of_node == np) {
 			mutex_unlock(&bridge_lock);
 			return bridge;

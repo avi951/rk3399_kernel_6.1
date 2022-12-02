@@ -230,11 +230,15 @@ drm_crtc_prepare_encoders(struct drm_device *dev)
 	const struct drm_encoder_helper_funcs *encoder_funcs;
 	struct drm_encoder *encoder;
 
+	dev_info(dev->dev, "DRM crtc prepare encoders");
+
 	drm_for_each_encoder(encoder, dev) {
 		encoder_funcs = encoder->helper_private;
 		/* Disable unused encoders */
-		if (encoder->crtc == NULL)
+		if (encoder->crtc == NULL) {
+			dev_info(dev->dev, "encoder: %s\n", encoder->name);
 			drm_encoder_disable(encoder);
+		}
 		/* Disable encoders whose CRTC is about to change */
 		if (encoder_funcs->get_crtc &&
 		    encoder->crtc != (*encoder_funcs->get_crtc)(encoder))
@@ -275,6 +279,8 @@ bool drm_crtc_helper_set_mode(struct drm_crtc *crtc,
 	bool saved_enabled;
 	struct drm_encoder *encoder;
 	bool ret = true;
+
+	dev_info(dev->dev, "DRM crtc helper set mode");
 
 	drm_warn_on_modeset_not_all_locked(dev);
 

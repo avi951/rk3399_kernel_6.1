@@ -55,7 +55,6 @@
 
 / {
 	compatible = "rockchip,rk3399";
-
 	interrupt-parent = <&gic>;
 	#address-cells = <2>;
 	#size-cells = <2>;
@@ -648,7 +647,7 @@
 		pinctrl-0 = <&i2c7_xfer>;
 		#address-cells = <1>;
 		#size-cells = <0>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	uart0: serial@ff180000 {
@@ -1352,7 +1351,7 @@
 		>;
 		auto-min-freq = <400000>;
 		auto-freq-en = <1>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	vpu: vpu_service@ff650000 {
@@ -1457,6 +1456,7 @@
 		power-domains = <&power RK3399_PD_RGA>;
 		status = "disabled";
 	};
+
 
 	efuse0: efuse@ff690000 {
 		compatible = "rockchip,rk3399-efuse";
@@ -1834,7 +1834,8 @@
 		power-domains = <&power RK3399_PD_VOPL>;
 		resets = <&cru SRST_A_VOP1>, <&cru SRST_H_VOP1>, <&cru SRST_D_VOP1>;
 		reset-names = "axi", "ahb", "dclk";
-		status = "disabled";
+		rockchip,grf = <&grf>;
+		status = "okay";
 
 		vopl_out: port {
 			#address-cells = <1>;
@@ -1903,7 +1904,8 @@
 		reset-names = "axi", "ahb", "dclk";
 		power-domains = <&power RK3399_PD_VOPB>;
 		iommus = <&vopb_mmu>;
-		status = "disabled";
+		rockchip,grf = <&grf>;
+		status = "okay";
 
 		vopb_out: port {
 			#address-cells = <1>;
@@ -2036,7 +2038,7 @@
 		power-domains = <&power RK3399_PD_HDCP>;
 		reg-io-width = <4>;
 		rockchip,grf = <&grf>;
-		status = "disabled";
+		status = "okay";
 
 		ports {
 			hdmi_in: port {
@@ -2049,6 +2051,7 @@
 				hdmi_in_vopl: endpoint@1 {
 					reg = <1>;
 					remote-endpoint = <&vopl_out_hdmi>;
+					// status = "disabled";
 				};
 			};
 		};
@@ -2144,12 +2147,11 @@
 		resets = <&cru SRST_P_EDP_CTRL>;
 		reset-names = "dp";
 		rockchip,grf = <&grf>;
-		status = "disabled";
+		status = "okay";
 
 		ports {
 			#address-cells = <1>;
 			#size-cells = <0>;
-
 			edp_in: port@0 {
 				reg = <0>;
 				#address-cells = <1>;
@@ -2175,7 +2177,7 @@
 		clocks = <&cru ACLK_HDCP22>, <&cru PCLK_HDCP22>,
 			 <&cru HCLK_HDCP22>;
 		clock-names ="aclk_hdcp2", "pclk_hdcp2", "hdcp2_clk_hdmi";
-		status = "disabled";
+		status = "okay";
 	};
 
 	display_subsystem: display-subsystem {
@@ -2184,7 +2186,7 @@
 		clocks = <&cru PLL_VPLL>, <&cru PLL_CPLL>;
 		clock-names = "hdmi-tmds-pll", "default-vop-pll";
 		devfreq = <&dmc>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	nocp_cci_msch0: nocp-cci-msch0@ffa86000 {
@@ -2549,8 +2551,8 @@
 		i2c7 {
 			i2c7_xfer: i2c7-xfer {
 				rockchip,pins =
-					<2 8 RK_FUNC_2 &pcfg_pull_none>,
-					<2 7 RK_FUNC_2 &pcfg_pull_none>;
+					<2 RK_PB0 RK_FUNC_2 &pcfg_pull_none>,
+					<2 RK_PA7 RK_FUNC_2 &pcfg_pull_none>;
 			};
 		};
 
@@ -2718,7 +2720,9 @@
 			};
 			spi1_cs0: spi1-cs0 {
 				rockchip,pins =
-					<1 10 RK_FUNC_2 &pcfg_pull_up>;
+					// <1 10 RK_FUNC_2 &pcfg_pull_none>,
+					<1 10 RK_FUNC_2 &pcfg_input>;
+
 			};
 			spi1_rx: spi1-rx {
 				rockchip,pins =
@@ -2987,6 +2991,15 @@
 			hdmi_cec: hdmi-cec {
 				rockchip,pins =
 					<4 23 RK_FUNC_1 &pcfg_pull_none>;
+			};
+		};
+
+		mipi {
+			mipim1_camera1_clk: mipim1-camera1-clk {
+				rockchip,pins =
+					/* mipim1_camera1_clk */
+					<2 RK_PA7 RK_FUNC_1 &pcfg_pull_none>,
+					<2 RK_PB0 RK_FUNC_1 &pcfg_pull_none>; // gpio2_b0 - MIPI_CAMERA1_CLK_M1
 			};
 		};
 

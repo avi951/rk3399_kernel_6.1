@@ -57,6 +57,11 @@ Module.symvers
 /Module.markers
 
 #
+# Out directory
+#
+out/
+
+#
 # Debian directory (make deb-pkg)
 #
 /debian/
@@ -120,3 +125,6 @@ all.config
 
 # fetched Android config fragments
 android/configs/android-*.cfg
+
+# Build log
+build.log
