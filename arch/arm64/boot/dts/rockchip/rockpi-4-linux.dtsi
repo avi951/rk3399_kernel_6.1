@@ -743,8 +743,9 @@
 		rockchip,camera-module-lens-name = "default";
 
 		port {
-			ucam_out0: endpoint {
-				remote-endpoint = <&mipi_in_ucam0>;
+			ucam_out1: endpoint {
+				//remote-endpoint = <&mipi_in_ucam0>;
+				remote-endpoint = <&mipi_in_ucam1>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -1237,8 +1238,21 @@
 		};
 	};
 };
+&rkisp1_1 {
+	status = "okay";
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-&mipi_dphy_rx0 {
+		isp1_mipi_in: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&dphy_tx1rx1_out>;
+		};
+	};
+};
+
+
+&mipi_dphy_tx1rx1 {
 	status = "okay";
 
 	ports {
@@ -1250,9 +1264,9 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			mipi_in_ucam0: endpoint@1 {
+			mipi_in_ucam1: endpoint@1 {
 				reg = <1>;
-				remote-endpoint = <&ucam_out0>;
+				remote-endpoint = <&ucam_out1>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -1262,13 +1276,47 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			dphy_rx0_out: endpoint@0 {
+			dphy_tx1rx1_out: endpoint@0 {
 				reg = <0>;
-				remote-endpoint = <&isp0_mipi_in>;
+				remote-endpoint = <&isp1_mipi_in>;
 			};
+			
 		};
 	};
 };
+
+
+// &mipi_dphy_rx0 {
+// 	status = "okay";
+
+// 	ports {
+// 		#address-cells = <1>;
+// 		#size-cells = <0>;
+
+// 		port@0 {
+// 			reg = <0>;
+// 			#address-cells = <1>;s
+// 			#size-cells = <0>;
+
+// 			mipi_in_ucam0: endpoint@1 {
+// 				reg = <1>;
+// 				remote-endpoint = <&ucam_out0>;
+// 				data-lanes = <1 2>;
+// 			};
+// 		};
+
+// 		port@1 {
+// 			reg = <1>;
+// 			#address-cells = <1>;
+// 			#size-cells = <0>;
+
+// 			dphy_rx0_out: endpoint@0 {
+// 				reg = <0>;
+// 				remote-endpoint = <&isp0_mipi_in>;
+// 			};
+// 		};
+// 	};
+// };
 
 
 &isp0_mmu {
