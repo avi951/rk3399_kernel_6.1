@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2199
+# shellcheck source=/dev/null
+#
+# Copyright (C) 2020-22 UtsavBalar1231 <utsavbalar1231@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Enviromental Variables
+DATE=$(date +"%d.%m.%y.%s")
+
+OUT_DIR=$(pwd)/out
+
+# Packages required to compile are:
+# bc bison flex build-essential gcc libssl-dev libncurses5-dev
+
+#PATH=$HOME/gcc-arm64/bin:$HOME/gcc-arm/bin:$PATH
+FILENAME="${OUT_DIR}/boot-${DATE}.img"
+KERNEL_IMAGE="${OUT_DIR}/arch/arm64/boot/Image"
+DTB_FILE="${OUT_DIR}/arch/arm64/boot/dts/rockchip/rk3399-rockpi4b.dtb"
+
+if [[ "$@" =~ "rockpro"* ]]; then
+	DTB_FILE="${OUT_DIR}/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dtb"
+fi
+
+# Pack Image into boot image
+function pack_image() {
+	mkfs.vfat -n "boot" -S 512 -C $FILENAME $((50 * 1024))
+
+	if [ -d $(pwd)/extlinux ]; then
+		cp -r $(pwd)/extlinux/ $OUT_DIR
+	else
+		echo "Extlinux directory does not exist!"
+	fi
+
+	cd $OUT_DIR || exit
+
+	if [ -f $(which mmd) ]; then
+		mmd -i $FILENAME ::/extlinux
+		mcopy -i $FILENAME -s $EXTLINUX_CONF ::/extlinux/extlinux.conf
+		mcopy -i $FILENAME -s $KERNEL_IMAGE ::
+		mcopy -i $FILENAME -s $DTB_FILE ::/rk3399-vaaman-rev01.dtb
+	else
+		echo "install mtools!"
+	fi
+}
+
+# Cleanup previous build files
+function cleanup() {
+	if [ -f ${FILENAME} ]; then
+		rm -f ${FILENAME}
+	fi
+	if [ -f ${KERNEL_IMAGE} ]; then
+		rm -f ${KERNEL_IMAGE}
+	fi
+	if [ -f ${DTB_FILE} ]; then
+		rm -f ${DTB_FILE}
+	fi
+	if [ -d ${OUT_DIR}/extlinux ]; then
+		rm -rf ${OUT_DIR}/extlinux
+	fi
+}
+
+ARGS="ARCH=arm64 \
+O=${OUT_DIR} \
+CROSS_COMPILE=aarch64-linux-gnu- \
+-j$(nproc --all)"
+
+if [[ "$@" =~ "debian"* ]]; then
+	echo -e "###### USING DEBIAN EXTLINUX CONFIG #####"
+	EXTLINUX_CONF=extlinux/rk3399-debian.conf
+elif [[ "$@" =~ "debian11"* ]]; then
+	echo -e "###### USING DEBIAN 11 EXTLINUX CONFIG #####"
+	EXTLINUX_CONF=extlinux/rk3399.conf
+elif [[ "$@" =~ "rockpro"* ]]; then
+	echo -e "###### USING MANJARO ROCKPRO EXTLINUX CONFIG #####"
+	EXTLINUX_CONF=extlinux/rk3399-rockpro.conf
+else
+	echo -e "###### USING MANJARO EXTLINUX CONFIG #####"
+	EXTLINUX_CONF=extlinux/rk3399-manjaro.conf
+fi
+
+# Cleanup previous build
+cleanup
+
+# Make defconfig
+make -j$(nproc --all) ${ARGS} rockchip_linux_defconfig
+
+# Make kernel Image
+if [ -f $(which ccache) ]; then
+	CROSS_COMPILE="aarch64-linux-gnu-"
+	make -j$(nproc --all) ${ARGS} CC="ccache ${CROSS_COMPILE}gcc" 2>&1 | tee build.log
+else
+	make -j$(nproc --all) ${ARGS} 2>&1 | tee build.log
+
+fi
+
+# Create boot image
+pack_image
+
+if [ -f ${FILENAME} ]; then
+	echo "Kernel compiled successfully!"
+else
+	echo "Kernel build failed!"
+fi
