@@ -1008,6 +1008,34 @@ static void panel_simple_shutdown(struct device *dev)
 	}
 }
 
+static const struct drm_display_mode simple_panel_mode = {
+	.clock = 40000,
+	.hdisplay = 800,
+	.hsync_start = 800 + 40,
+	.hsync_end = 800 + 48 + 32,
+	.htotal = 800 + 48 + 128 + 88,
+	.vdisplay = 600,
+	.vsync_start = 600 + 1,
+	.vsync_end = 600 + 1 + 4,
+	.vtotal = 600 + 1 + 4 + 23,
+	.vrefresh = 60,
+	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
+};
+
+static const struct panel_desc simple_panel = {
+	.modes = &simple_panel_mode,
+	.num_modes = 1,
+	.bpc = 8,
+	.size = {
+		.width = 277,
+		.height = 208,
+	},
+	.delay = {
+		.unprepare = 160,
+	},
+	.bus_format = MEDIA_BUS_FMT_RGB888_1X24,
+};
+
 static const struct drm_display_mode ampire_am800480r3tmqwa1h_mode = {
 	.clock = 33333,
 	.hdisplay = 800,
@@ -2101,7 +2129,7 @@ static const struct panel_desc shelly_sca07010_bfn_lnn = {
 static const struct of_device_id platform_of_match[] = {
 	{
 		.compatible = "simple-panel",
-		.data = NULL,
+		.data = &simple_panel,
 	}, {
 		.compatible = "ampire,am800480r3tmqwa1h",
 		.data = &ampire_am800480r3tmqwa1h,

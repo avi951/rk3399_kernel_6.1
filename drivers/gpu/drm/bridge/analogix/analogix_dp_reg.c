@@ -26,6 +26,24 @@
 #define COMMON_INT_MASK_4	(HOTPLUG_CHG | HPD_LOST | PLUG)
 #define INT_STA_MASK		INT_HPD
 
+static void analogix_dp_write(struct analogix_dp_device *dp, u32 reg, u32 val)
+{
+	if (dp->plat_data && dp->plat_data->dev_type == ROCKCHIP_DP) {
+		readl(dp->reg_base);
+		writel(val, dp->reg_base + reg);
+	}
+
+	writel(val, dp->reg_base + reg);
+}
+
+static u32 analogix_dp_read(struct analogix_dp_device *dp, u32 reg)
+{
+	if (dp->plat_data && dp->plat_data->dev_type == ROCKCHIP_DP)
+		readl(dp->reg_base + reg);
+
+	return readl(dp->reg_base + reg);
+}
+
 void analogix_dp_enable_video_mute(struct analogix_dp_device *dp, bool enable)
 {
 	u32 reg;
@@ -1075,4 +1093,30 @@ ssize_t analogix_dp_transfer(struct analogix_dp_device *dp,
 		msg->reply = DP_AUX_NATIVE_REPLY_ACK;
 
 	return num_transferred;
+}
+
+void analogix_dp_ssc_enable(struct analogix_dp_device *dp)
+{
+	u8 reg;
+
+	/* 4500ppm */
+	analogix_dp_write(dp, ANALOIGX_DP_SSC_REG, 0x19);
+	/*
+	 * To apply updated SSC parameters into SSC operation,
+	 * firmware must disable and enable this bit.
+	 */
+	reg = analogix_dp_read(dp, ANALOGIX_DP_FUNC_EN_2);
+	reg |= SSC_FUNC_EN_N;
+	analogix_dp_write(dp, ANALOGIX_DP_FUNC_EN_2, reg);
+	reg &= ~SSC_FUNC_EN_N;
+	analogix_dp_write(dp, ANALOGIX_DP_FUNC_EN_2, reg);
+}
+
+void analogix_dp_ssc_disable(struct analogix_dp_device *dp)
+{
+	u8 reg;
+
+	reg = analogix_dp_read(dp, ANALOGIX_DP_FUNC_EN_2);
+	reg |= SSC_FUNC_EN_N;
+	analogix_dp_write(dp, ANALOGIX_DP_FUNC_EN_2, reg);
 }

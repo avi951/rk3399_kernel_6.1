@@ -145,7 +145,7 @@
 	};
 
 	spdif_out: spdif-out {
-		status = "okay";
+		status = "disabled";
 		compatible = "linux,spdif-dit";
 		#sound-dai-cells = <0>;
 	};
@@ -254,7 +254,7 @@
 	};
 
 	spdif-sound {
-		status = "okay";
+		status = "disabled";
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "rk-spdif-sound";
 		simple-audio-card,cpu {
@@ -265,7 +265,7 @@
 		};
 	};
 
-	backlight: lcd-backlight {
+	/*backlight: lcd-backlight {
 		status = "okay";
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 25000 0>;
@@ -307,22 +307,46 @@
 			240 241 242 243 244 245 246 247
 			248 249 250 251 252 253 254 255>;
 		default-brightness-level = <200>;
-	};
+	};*/
 
-	edp_panel: edp-panel {
+	/*edp_panel: edp-panel {
 		status = "okay";
-		compatible = "boe,nt156whm-n42";
-		backlight = <&backlight>;
+		compatible = "simple-panel";
+		//backlight = <&backlight>;
 		power-supply = <&vcc3v3_sys>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&edp_panel_en>;
-		enable-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&gpio1 RK_PA4 GPIO_ACTIVE_HIGH>;
 		prepare-delay-ms = <20>;
 		enable-delay-ms = <20>;
 
 		ports {
 			panel_in_edp: endpoint {
 				remote-endpoint = <&edp_out_panel>;
+			};
+		};
+	};*/
+
+	lt7911: lt7911d {
+		compatible = "lt,lt7911";
+		vdd-supply = <&vcc3v3_sys>;
+		ddc-i2c-bus = <&i2c4>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lt7911_rst>;
+		reset-gpios = <&gpio1 RK_PA4 GPIO_ACTIVE_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				bridge_in_edp: endpoint {
+					remote-endpoint = <&edp_out_bridge>;
+				};
 			};
 		};
 	};
@@ -500,9 +524,14 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			edp_out_panel: endpoint {
-				remote-endpoint = <&panel_in_edp>;
+			edp_out_bridge: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&bridge_in_edp>;
 			};
+
+			/*edp_out_panel: endpoint {
+				remote-endpoint = <&panel_in_edp>;
+			};*/
 		};
 	};
 };
@@ -758,10 +787,9 @@
 
 &i2c1 {
 	status = "okay";
-	i2c-scl-rising-time-ns = <168>;
-	i2c-scl-falling-time-ns = <4>;
 
 	es8316: es8316@11 {
+		status = "okay";
 		#sound-dai-cells = <0>;
 		compatible = "everest,es8316";
 		reg = <0x11>;
@@ -850,7 +878,7 @@
 };
 
 &hdmi {
-	status = "disabled";
+	status = "okay";
 	rockchip,phy-table =
 		<74250000 0x8009 0x0004 0x0272>,
 		<165000000 0x802b 0x0004 0x0209>,
@@ -1185,17 +1213,23 @@
 		};
 	};
 
+	lt7911d {
+		lt7911_rst: lt7911-rst {
+			rockchip,pins = <1 RK_PA4 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+	};
+
 	/*backlight {
 		backlight_en: backlight-en {
 			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_output_high>;
 		};
 	};*/
 
-	lcd_panel {
+	/*lcd_panel {
 		edp_panel_en: edp-panel-en {
-			rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_output_high>;
+			rockchip,pins = <1 RK_PA4 RK_FUNC_GPIO &pcfg_output_high>;
 		};
-	};
+	};*/
 
 	fusb30x {
 		fusb0_int: fusb0-int {
@@ -1351,7 +1385,7 @@
 
 	route {
 		route_hdmi: route-hdmi {
-			status = "disabled";
+			status = "okay";
 		};
 
 		route_edp: route-edp {
@@ -1374,12 +1408,4 @@
 
 &vopb_mmu {
 	status = "okay";
-};
-
-&vopl_out_hdmi {
-	status = "disabled";
-};
-
-&vopb_out_hdmi {
-	status = "disabled";
 };

@@ -161,7 +161,7 @@ analogix_dp_set_lane_lane_pre_emphasis(struct analogix_dp_device *dp,
 
 static int analogix_dp_link_start(struct analogix_dp_device *dp)
 {
-	u8 buf[4];
+	u8 buf[4], dpcd = 0;
 	int lane, lane_count, pll_tries, retval;
 
 	lane_count = dp->link_train.lane_count;
@@ -173,6 +173,8 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 		dp->link_train.cr_loop[lane] = 0;
 
 	/* Set link rate and count as you want to establish*/
+	dev_err(dp->dev, "setting link rate to: %.2x", dp->link_train.link_rate);
+	dev_err(dp->dev, "setting lane count to: %.2x", dp->link_train.lane_count);
 	analogix_dp_set_link_bandwidth(dp, dp->link_train.link_rate);
 	analogix_dp_set_lane_count(dp, dp->link_train.lane_count);
 
@@ -182,6 +184,36 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 	retval = drm_dp_dpcd_write(&dp->aux, DP_LINK_BW_SET, buf, 2);
 	if (retval < 0)
 		return retval;
+
+	/* possibly enable downspread on the sink */
+	retval = drm_dp_dpcd_readb(&dp->aux, DP_MAX_DOWNSPREAD, &dpcd);
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_MAX_DOWNSPREAD failed\n");
+		return retval;
+	}
+
+	if (dpcd & DP_MAX_DOWNSPREAD_0_5) {
+		DRM_DEV_INFO(dp->dev, "Enable downspread on the sink\n");
+
+		analogix_dp_ssc_enable(dp);
+
+		retval = drm_dp_dpcd_writeb(&dp->aux, DP_DOWNSPREAD_CTRL,
+					    DP_SPREAD_AMP_0_5);
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_DOWNSPREAD_CTRL failed\n");
+			return retval;
+		}
+	} else {
+		DRM_DEV_INFO(dp->dev, "Disable downspread on the sink\n");
+
+		analogix_dp_ssc_disable(dp);
+
+		retval = drm_dp_dpcd_writeb(&dp->aux, DP_DOWNSPREAD_CTRL, 0);
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_DOWNSPREAD_CTRL failed\n");
+			return retval;
+		}
+	}
 
 	/* Set TX pre-emphasis to minimum */
 	for (lane = 0; lane < lane_count; lane++)
@@ -374,18 +406,24 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 	lane_count = dp->link_train.lane_count;
 
 	retval = drm_dp_dpcd_read(&dp->aux, DP_LANE0_1_STATUS, link_status, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_LANE0_1_STATUS failed\n");
 		return retval;
+	}
 
 	retval = drm_dp_dpcd_read(&dp->aux, DP_ADJUST_REQUEST_LANE0_1,
 				  adjust_request, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_ADJUST_REQUEST_LANE0_1 failed\n");
 		return retval;
+	}
 
 	if (analogix_dp_clock_recovery_ok(link_status, lane_count) == 0) {
 		retval = drm_dp_dpcd_readb(&dp->aux, DP_MAX_LANE_COUNT, &dpcd);
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "DP_MAX_LANE_COUNT failed\n");
 			return retval;
+		}
 
 		tps3_supported = !!(dpcd & DP_TPS3_SUPPORTED);
 
@@ -401,8 +439,10 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 					    (tps3_supported ?
 					     DP_TRAINING_PATTERN_3 :
 					     DP_TRAINING_PATTERN_2));
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "setting training patter for EQ failed\n");
 			return retval;
+		}
 
 		dev_info(dp->dev, "Link Training Clock Recovery success\n");
 		dp->link_train.lt_state = EQUALIZER_TRAINING;
@@ -558,11 +598,17 @@ static void analogix_dp_init_training(struct analogix_dp_device *dp,
 	 * MACRO_RST must be applied after the PLL_LOCK to avoid
 	 * the DP inter pair skew issue for at least 10 us
 	 */
+
+	dev_err(dp->dev, "initializing link training\n");
+
 	analogix_dp_reset_macro(dp);
 
 	/* Initialize by reading RX's DPCD */
 	analogix_dp_get_max_rx_bandwidth(dp, &dp->link_train.link_rate);
 	analogix_dp_get_max_rx_lane_count(dp, &dp->link_train.lane_count);
+
+	dev_err(dp->dev, "got rx max link rate as %.2x\n", dp->link_train.link_rate);
+	dev_err(dp->dev, "got rx max lane count as %.2x\n", dp->link_train.lane_count);
 
 	if ((dp->link_train.link_rate != DP_LINK_BW_1_62) &&
 	    (dp->link_train.link_rate != DP_LINK_BW_2_7) &&
@@ -586,6 +632,9 @@ static void analogix_dp_init_training(struct analogix_dp_device *dp,
 
 	/* All DP analog module power up */
 	analogix_dp_set_analog_power_down(dp, POWER_ALL, 0);
+
+	dev_err(dp->dev, "set tx max link rate as %.2x\n", dp->link_train.link_rate);
+	dev_err(dp->dev, "set tx max lane count as %.2x\n", dp->link_train.lane_count);
 }
 
 static int analogix_dp_sw_link_training(struct analogix_dp_device *dp)
@@ -594,6 +643,8 @@ static int analogix_dp_sw_link_training(struct analogix_dp_device *dp)
 
 	dp->link_train.lt_state = START;
 
+	dev_err(dp->dev, "dp sw link training\n");
+
 	/* Process here */
 	while (!retval && !training_finished) {
 		switch (dp->link_train.lt_state) {
@@ -601,16 +652,22 @@ static int analogix_dp_sw_link_training(struct analogix_dp_device *dp)
 			retval = analogix_dp_link_start(dp);
 			if (retval)
 				dev_err(dp->dev, "LT link start failed!\n");
+			else 
+				dev_err(dp->dev, "LT link started successfully\n");
 			break;
 		case CLOCK_RECOVERY:
 			retval = analogix_dp_process_clock_recovery(dp);
 			if (retval)
 				dev_err(dp->dev, "LT CR failed!\n");
+			else
+				dev_err(dp->dev, "LT CR completed successfully\n");
 			break;
 		case EQUALIZER_TRAINING:
 			retval = analogix_dp_process_equalizer_training(dp);
 			if (retval)
 				dev_err(dp->dev, "LT EQ failed!\n");
+			else
+				dev_err(dp->dev, "LT EQ completed successfully\n");
 			break;
 		case FINISHED:
 			training_finished = 1;
@@ -632,6 +689,7 @@ static int analogix_dp_set_link_train(struct analogix_dp_device *dp,
 	int retval;
 
 	for (i = 0; i < DP_TIMEOUT_LOOP_COUNT; i++) {
+		dev_err(dp->dev, "dp setting link train for %d times\n", i);
 		analogix_dp_init_training(dp, count, bwtype);
 		retval = analogix_dp_sw_link_training(dp);
 		if (retval == 0)
@@ -1090,6 +1148,9 @@ static void analogix_dp_bridge_mode_set(struct drm_bridge *bridge,
 		video->v_sync_polarity = true;
 	if (of_property_read_bool(dp_node, "interlaced"))
 		video->interlaced = true;
+
+	dev_err(dp->dev, "video->color_depth is: %d", video->color_depth);
+	dev_err(dp->dev, "video->color_space is: %d", video->color_space);
 }
 
 static void analogix_dp_bridge_nop(struct drm_bridge *bridge)

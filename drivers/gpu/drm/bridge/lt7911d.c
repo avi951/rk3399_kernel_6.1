@@ -30,6 +30,22 @@ struct lt7911d {
 	struct gpio_desc	*gpio_rst;
 };
 
+struct lt7911d_desc {
+	const struct drm_display_mode *modes;
+	unsigned int num_modes;
+	const struct display_timing *timings;
+	unsigned int num_timings;
+
+	unsigned int bpc;
+
+	struct {
+		unsigned int width;
+		unsigned int height;
+	} size;
+
+	u32 bus_format;
+};
+
 static inline struct lt7911d *
 drm_bridge_to_lt7911d(struct drm_bridge *bridge)
 {
@@ -75,7 +91,7 @@ fallback:
 	ret = drm_add_modes_noedid(connector, 1920, 1200);
 
 	/* And prefer a mode pretty much anyone can handle */
-	drm_set_preferred_mode(connector, 800, 600);
+	drm_set_preferred_mode(connector, 1280, 1024);
 
 	return ret;
 }
@@ -148,9 +164,9 @@ static void lt7911d_enable(struct drm_bridge *bridge)
 		DRM_ERROR("Failed to enable vdd regulator: %d\n", ret);
 
 	if(lt7911d->gpio_rst) {
-		gpiod_set_value(lt7911d->gpio_rst, 0);
+		gpiod_set_value(lt7911d->gpio_rst, 1); //0 for rockpro
 		usleep_range(10, 20);
-		gpiod_set_value(lt7911d->gpio_rst, 1);
+		gpiod_set_value(lt7911d->gpio_rst, 0); //1 for rockpro
 	}
 }
 
@@ -162,7 +178,7 @@ static void lt7911d_disable(struct drm_bridge *bridge)
 		regulator_disable(lt7911d->vdd);
 
 	if (lt7911d->gpio_rst)
-		gpiod_set_value(lt7911d->gpio_rst, 1);
+		gpiod_set_value(lt7911d->gpio_rst, 0); //1 for rockpro
 }
 
 static const struct drm_bridge_funcs lt7911d_bridge_funcs = {
@@ -221,7 +237,7 @@ static int lt7911d_probe(struct platform_device *pdev)
 		dev_dbg(&pdev->dev, "No vdd regulator found: %d\n", ret);
 	}
 
-	lt7911d->gpio_rst = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_HIGH);
+	lt7911d->gpio_rst = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW); //HIGH for rockpro
 	if (IS_ERR(lt7911d->gpio_rst)) {
 		err = PTR_ERR(lt7911d->gpio_rst);
 		dev_err(&pdev->dev, "cannot get gpio_rst %d\n", err);
@@ -263,10 +279,38 @@ static int lt7911d_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct drm_display_mode lt7911d_mode = {
+	.clock = 40000,
+	.hdisplay = 800,
+	.hsync_start = 800 + 40,
+	.hsync_end = 800 + 48 + 32,
+	.htotal = 800 + 48 + 128 + 88,
+	.vdisplay = 600,
+	.vsync_start = 600 + 1,
+	.vsync_end = 600 + 1 + 4,
+	.vtotal = 600 + 1 + 4 + 23,
+	.vrefresh = 60,
+	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
+};
+
+static const struct lt7911d_desc lt7911d = {
+	.modes = &lt7911d_mode,
+	.num_modes = 1,
+	.bpc = 8,
+	.size = {
+		.width = 300,
+		.height = 250,
+	},
+	.bus_format = MEDIA_BUS_FMT_RGB888_1X24,
+};
+
 static const struct of_device_id lt7911d_match[] = {
-	{ .compatible = "lt,lt7911" },
+	{ .compatible = "lt,lt7911",
+	  .data = &lt7911d,
+	},
 	{},
 };
+
 MODULE_DEVICE_TABLE(of, lt7911d_match);
 
 static struct platform_driver lt7911d_driver = {

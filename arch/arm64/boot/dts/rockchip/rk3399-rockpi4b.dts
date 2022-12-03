@@ -76,6 +76,15 @@
 		regulator-always-on;
 	};
 
+	dc_12v: dc-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "dc_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
 	vcc_sys: vcc-sys {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_sys";
@@ -290,6 +299,91 @@
 	test-power {
 		status = "okay";
 	};
+	/*backlight: lcd-backlight {
+		status = "okay";
+		compatible = "pwm-backlight";
+		pwms = <&pwm0 0 25000 0>;
+		power-supply = <&dc_12v>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&backlight_en>;
+		//enable-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+		brightness-levels = <
+			  0   1   2   3   4   5   6   7
+			  8   9  10  11  12  13  14  15
+			 16  17  18  19  20  21  22  23
+			 24  25  26  27  28  29  30  31
+			 32  33  34  35  36  37  38  39
+			 40  41  42  43  44  45  46  47
+			 48  49  50  51  52  53  54  55
+			 56  57  58  59  60  61  62  63
+			 64  65  66  67  68  69  70  71
+			 72  73  74  75  76  77  78  79
+			 80  81  82  83  84  85  86  87
+			 88  89  90  91  92  93  94  95
+			 96  97  98  99 100 101 102 103
+			104 105 106 107 108 109 110 111
+			112 113 114 115 116 117 118 119
+			120 121 122 123 124 125 126 127
+			128 129 130 131 132 133 134 135
+			136 137 138 139 140 141 142 143
+			144 145 146 147 148 149 150 151
+			152 153 154 155 156 157 158 159
+			160 161 162 163 164 165 166 167
+			168 169 170 171 172 173 174 175
+			176 177 178 179 180 181 182 183
+			184 185 186 187 188 189 190 191
+			192 193 194 195 196 197 198 199
+			200 201 202 203 204 205 206 207
+			208 209 210 211 212 213 214 215
+			216 217 218 219 220 221 222 223
+			224 225 226 227 228 229 230 231
+			232 233 234 235 236 237 238 239
+			240 241 242 243 244 245 246 247
+			248 249 250 251 252 253 254 255>;
+		default-brightness-level = <200>;
+	};*/
+
+	/*edp_panel: edp-panel {
+		status = "okay";
+		compatible = "simple-panel";
+		backlight = <&backlight>;
+		power-supply = <&vcc3v3_sys>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&edp_panel_en>;
+		enable-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
+		prepare-delay-ms = <20>;
+		enable-delay-ms = <20>;
+
+		ports {
+			panel_in_edp: endpoint {
+				remote-endpoint = <&edp_out_panel>;
+			};
+		};
+	};*/
+
+	lt7911: lt7911d {
+		compatible = "lt,lt7911";
+		vdd-supply = <&vcc3v3_sys>;
+		ddc-i2c-bus = <&i2c4>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lt7911_rst>;
+		reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				bridge_in_edp: endpoint {
+					remote-endpoint = <&edp_out_bridge>;
+				};
+			};
+		};
+	};
 };
 
 &hdmi {
@@ -303,6 +397,30 @@
 		<297000000 0x8039 0x0005 0x028d>,
 		<594000000 0x8039 0x0000 0x019d>,
 		<000000000 0x0000 0x0000 0x0000>;
+};
+
+&edp {
+	status = "okay";
+	vcc = "vcc1v8_s0";
+	force-hpd;
+	// /delete-node/ pinctrl-0;
+
+	ports {
+		edp_out: port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			edp_out_bridge: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&bridge_in_edp>;
+			};
+
+			/*edp_out_panel: endpoint {
+				remote-endpoint = <&panel_in_edp>;
+			};*/
+		};
+	};
 };
 
 &sdmmc {
@@ -642,10 +760,16 @@
 		clock-names = "clk_cif_out";
 		pinctrl-names = "rockchip,camera_default";
 		pwdn-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
-		
+
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		rockchip,camera-module-name = "default";
+		rockchip,camera-module-lens-name = "default";
+
 		port {
-			ucam_out0: endpoint {
-				remote-endpoint = <&mipi_in_ucam0>;
+			ucam_out1: endpoint {
+				//remote-endpoint = <&mipi_in_ucam0>;
+				remote-endpoint = <&mipi_in_ucam1>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -979,6 +1103,23 @@
 };
 
 &pinctrl {
+	lt7911d {
+		lt7911_rst: lt7911-rst {
+			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_output_low>;
+		};
+	};
+
+	/*backlight {
+		backlight_en: backlight-en {
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+	};*/
+
+	/*lcd_panel {
+		edp_panel_en: edp-panel-en {
+			rockchip,pins = <4 RK_PD6 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+	};*/
 
 	sdio0 {
 		sdio0_bus1: sdio0-bus1 {
@@ -1087,11 +1228,12 @@
 		};
 	};
 
-	i2c4 {                                                                 
+	i2c4 {
 		i2c4_xfer: i2c4-xfer {
 			rockchip,pins =
 				<1 12 RK_FUNC_1 &pcfg_pull_up>,
-				<1 11 RK_FUNC_1 &pcfg_pull_up>;
+				<1 11 RK_FUNC_1 &pcfg_pull_up>,
+				<1 13 RK_FUNC_GPIO &pcfg_pull_up>;	//camera module enable pin
 		};
 	};
 	i2s0 {
@@ -1161,23 +1303,21 @@
 	status = "okay";
 };
 
-&rkisp1_0 {
-	// TODO: this crashes kernel
-	status = "disabled";
+&rkisp1_1 {
+	status = "okay";
 	port {
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		isp0_mipi_in: endpoint@0 {
+		isp1_mipi_in: endpoint@0 {
 			reg = <0>;
-			remote-endpoint = <&dphy_rx0_out>;
+			remote-endpoint = <&dphy_tx1rx1_out>;
 		};
 	};
 };
 
-&mipi_dphy_rx0 {
-	// TODO: this crashes kernel
-	status = "disabled";
+&mipi_dphy_tx1rx1 {
+	status = "okay";
 
 	ports {
 		#address-cells = <1>;
@@ -1188,9 +1328,9 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			mipi_in_ucam0: endpoint@1 {
+			mipi_in_ucam1: endpoint@1 {
 				reg = <1>;
-				remote-endpoint = <&ucam_out0>;
+				remote-endpoint = <&ucam_out1>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -1200,10 +1340,11 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			dphy_rx0_out: endpoint@0 {
+			dphy_tx1rx1_out: endpoint@0 {
 				reg = <0>;
-				remote-endpoint = <&isp0_mipi_in>;
+				remote-endpoint = <&isp1_mipi_in>;
 			};
+
 		};
 	};
 };
@@ -1213,7 +1354,7 @@
 };
 
 &isp1_mmu {
-	status = "disabled";
+	status = "okay";
 };
 
 &vpu {
@@ -1237,19 +1378,11 @@
 
 	route {
 		route_hdmi: route-hdmi {
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vopb_out_hdmi>;
+			status = "okay";
 		};
 
-		route_dp: route-dp {
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vopl_out_dp>;
+		route_edp: route-edp {
+			status = "okay";
 		};
 	};
 };
