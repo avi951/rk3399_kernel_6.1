@@ -17,7 +17,7 @@
 # limitations under the License.
 
 # Enviromental Variables
-DATE=$(date +"%d.%m.%y.%s")
+DATE=$(date +"%d.%m.%y")
 
 OUT_DIR=$(pwd)/out
 
