@@ -765,6 +765,26 @@
 	vref-supply = <&vcc_1v8>;
 };
 
+&spi1 {
+	status = "okay";
+
+	w25q128: w25q128-flash@0 {
+		status = "okay";
+		compatible = "winbond,w25q128", "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+	};
+
+	w25q64: w25q64-flash@0 {
+		status = "okay";
+		cs-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
+		compatible = "winbond,w25q64dw", "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+	};
+};
+
+
 &sdio0 {
 	#address-cells = <1>;
 	#size-cells = <0>;
