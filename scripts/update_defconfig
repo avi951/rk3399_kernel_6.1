@@ -1,0 +1,7 @@
+#/usr/bin/env bash
+
+make O=out ARCH=arm64 rockchip_linux_defconfig -j$(nproc --all)
+
+make O=out ARCH=arm64 savedefconfig -j$(nproc --all)
+
+mv out/defconfig arch/arm64/configs/rockchip_linux_defconfig
