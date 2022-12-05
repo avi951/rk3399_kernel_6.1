@@ -183,7 +183,7 @@
 	};
 
 	camera_pwdn_gpio: camera-pwdn-gpio {
-		status = "disabled";
+		status = "okay";
 		compatible = "regulator-fixed";
 		regulator-name = "camera_pwdn_gpio";
 		regulator-always-on;
@@ -195,7 +195,7 @@
 	};
 
 	clk_cam_24m: external-camera-clock-24m {
-		status = "disabled";
+		status = "okay";
 		compatible = "fixed-clock";
 		clock-frequency = <24000000>;
 		clock-output-names = "clk_cam_24m";
@@ -523,9 +523,10 @@
 };
 
 &i2c4 {
-	status = "disabled";
+	status = "okay";
+
 	camera_imx219: camera-imx219@10 {
-		status = "disabled";
+		status = "okay";
 		compatible = "sony,imx219";
 		reg = <0x10>;
 
