@@ -67,7 +67,7 @@ static int pca9570_get(struct gpio_chip *chip, unsigned offset)
 	return !!(buffer & BIT(offset));
 }
 
-static void pca9570_set(struct gpio_chip *chip, unsigned offset, int value)
+static int pca9570_output(struct gpio_chip *chip, unsigned offset, int value)
 {
 	struct pca9570 *gpio = gpiochip_get_data(chip);
 	u8 buffer;
@@ -82,18 +82,23 @@ static void pca9570_set(struct gpio_chip *chip, unsigned offset, int value)
 		buffer &= ~BIT(offset);
 
 	ret = pca9570_write(gpio, buffer);
-	if (ret)
-		goto out;
 
 	gpio->out = buffer;
 
-out:
 	mutex_unlock(&gpio->lock);
+
+	return ret;
+}
+
+static void pca9570_set(struct gpio_chip *chip, unsigned offset, int value)
+{
+	pca9570_output(chip, offset, value);
 }
 
 static int pca9570_probe(struct i2c_client *client)
 {
 	struct pca9570 *gpio;
+	int status, pin;
 
 	gpio = devm_kzalloc(&client->dev, sizeof(*gpio), GFP_KERNEL);
 	if (!gpio)
@@ -116,7 +121,26 @@ static int pca9570_probe(struct i2c_client *client)
 
 	i2c_set_clientdata(client, gpio);
 
-	return devm_gpiochip_add_data(&client->dev, &gpio->chip, gpio);
+	status =  devm_gpiochip_add_data(&client->dev, &gpio->chip, gpio);
+	if (status < 0)
+		goto fail;
+
+	for (pin = 0; pin < 4; pin++) {
+		if (pin == 0)
+			pr_info("[pca]not setting value for P%d as it is power pin\n", pin);
+		else {
+			pr_info("[pca]setting 0 for P%d\n", pin);
+			pca9570_output(&gpio->chip, pin, 0);;
+		}
+	}
+
+	pr_err("[pca]probed successfully!!!!");
+
+	return 0;
+
+fail:
+	pr_err("[pca]probe error %d for %s\n", status, client->name);
+	return status;
 }
 
 static const struct i2c_device_id pca9570_id_table[] = {
