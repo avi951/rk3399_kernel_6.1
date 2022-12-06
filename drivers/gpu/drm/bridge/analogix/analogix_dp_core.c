@@ -344,6 +344,8 @@ static int analogix_dp_link_start(struct analogix_dp_device *dp)
 		dp->link_train.cr_loop[lane] = 0;
 
 	/* Set link rate and count as you want to establish*/
+	dev_err(dp->dev, "setting link rate to: %.2x", dp->link_train.link_rate);
+	dev_err(dp->dev, "setting lane count to: %.2x", dp->link_train.lane_count);
 	analogix_dp_set_link_bandwidth(dp, dp->link_train.link_rate);
 	analogix_dp_set_lane_count(dp, dp->link_train.lane_count);
 
@@ -515,8 +517,10 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 	lane_count = dp->link_train.lane_count;
 
 	retval = drm_dp_dpcd_read(&dp->aux, DP_LANE0_1_STATUS, link_status, 2);
-	if (retval < 0)
+	if (retval < 0) {
+		dev_err(dp->dev, "DP_LANE0_1_STATUS failed\n");
 		return retval;
+	}
 
 	if (analogix_dp_clock_recovery_ok(link_status, lane_count) == 0) {
 		if (analogix_dp_tps3_supported(dp))
@@ -529,10 +533,12 @@ static int analogix_dp_process_clock_recovery(struct analogix_dp_device *dp)
 					    DP_LINK_SCRAMBLING_DISABLE |
 					    (training_pattern == TRAINING_PTN3 ?
 					     DP_TRAINING_PATTERN_3 : DP_TRAINING_PATTERN_2));
-		if (retval < 0)
+		if (retval < 0) {
+			dev_err(dp->dev, "setting training patter for EQ failed\n");
 			return retval;
+		}
 
-		dev_dbg(dp->dev, "Link Training Clock Recovery success\n");
+		dev_err(dp->dev, "Link Training Clock Recovery success\n");
 		dp->link_train.lt_state = EQUALIZER_TRAINING;
 
 		return 0;
@@ -702,11 +708,17 @@ static int analogix_dp_full_link_train(struct analogix_dp_device *dp,
 	 * MACRO_RST must be applied after the PLL_LOCK to avoid
 	 * the DP inter pair skew issue for at least 10 us
 	 */
+
+	dev_err(dp->dev, "initializing link training\n");
+
 	analogix_dp_reset_macro(dp);
 
 	/* Initialize by reading RX's DPCD */
 	analogix_dp_get_max_rx_bandwidth(dp, &dp->link_train.link_rate);
 	analogix_dp_get_max_rx_lane_count(dp, &dp->link_train.lane_count);
+
+	dev_err(dp->dev, "got rx max link rate as %.2x\n", dp->link_train.link_rate);
+	dev_err(dp->dev, "got rx max lane count as %.2x\n", dp->link_train.lane_count);
 
 	/* Setup TX lane count & rate */
 	dp->link_train.lane_count = min_t(u32, dp->link_train.lane_count, max_lanes);
@@ -725,7 +737,12 @@ static int analogix_dp_full_link_train(struct analogix_dp_device *dp,
 	/* All DP analog module power up */
 	analogix_dp_set_analog_power_down(dp, POWER_ALL, 0);
 
+	dev_err(dp->dev, "set tx max link rate as %.2x\n", dp->link_train.link_rate);
+	dev_err(dp->dev, "set tx max lane count as %.2x\n", dp->link_train.lane_count);
+
 	dp->link_train.lt_state = START;
+
+	dev_err(dp->dev, "dp sw link training\n");
 
 	/* Process here */
 	while (!retval && !training_finished) {
@@ -734,16 +751,22 @@ static int analogix_dp_full_link_train(struct analogix_dp_device *dp,
 			retval = analogix_dp_link_start(dp);
 			if (retval)
 				dev_err(dp->dev, "LT link start failed!\n");
+			else 
+				dev_err(dp->dev, "LT link started successfully\n");
 			break;
 		case CLOCK_RECOVERY:
 			retval = analogix_dp_process_clock_recovery(dp);
 			if (retval)
 				dev_err(dp->dev, "LT CR failed!\n");
+			else
+				dev_err(dp->dev, "LT CR completed successfully\n");
 			break;
 		case EQUALIZER_TRAINING:
 			retval = analogix_dp_process_equalizer_training(dp);
 			if (retval)
 				dev_err(dp->dev, "LT EQ failed!\n");
+			else
+				dev_err(dp->dev, "LT EQ completed successfully\n");
 			break;
 		case FINISHED:
 			training_finished = 1;
@@ -1853,6 +1876,9 @@ static void analogix_dp_bridge_mode_set(struct drm_bridge *bridge,
 		video->v_sync_polarity = true;
 	if (of_property_read_bool(dp_node, "interlaced"))
 		video->interlaced = true;
+
+	dev_err(dp->dev, "video->color_depth is: %d", video->color_depth);
+	dev_err(dp->dev, "video->color_space is: %d", video->color_space);
 }
 
 static bool analogix_dp_link_config_validate(u8 link_rate, u8 lane_count)

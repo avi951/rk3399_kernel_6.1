@@ -195,6 +195,22 @@
 		pinctrl-0 = <&cam_pwdn_gpio>;
 	};
 
+	edp_panel: edp-panel {
+		compatible = "simple-panel";
+		ddc-i2c-bus = <&i2c7>;
+		power-supply = <&vcc3v3_sys>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lt7911d_reset>;
+		reset-gpios = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+
+		port {
+			panel_in_edp: endpoint {
+				remote-endpoint = <&edp_out_panel>;
+			};
+		};
+	};
+
 	clk_cam_24m: external-camera-clock-24m {
 		status = "okay";
 		compatible = "fixed-clock";
@@ -704,6 +720,12 @@
 };
 
 &pinctrl {
+	lt7911d {
+		lt7911d_reset: lt7911-rst {
+			rockchip,pins = <3 30 RK_FUNC_GPIO &pcfg_output_low>;
+		};
+	};
+
 	bt {
 		bt_enable_h: bt-enable-h {
 			rockchip,pins = <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
@@ -999,6 +1021,10 @@
 	status = "okay";
 };
 
+&route_edp {
+	status = "okay";
+};
+
 &vopb {
 	status = "okay";
 	assigned-clocks = <&cru DCLK_VOP0_DIV>;
@@ -1086,6 +1112,10 @@
 	status = "okay";
 };
 
+&isp1_mmu {
+	status = "okay";
+};
+
 &rkisp1_0 {
 	status = "okay";
 
@@ -1098,4 +1128,59 @@
 			remote-endpoint = <&dphy_rx0_out>;
 		};
 	};
+};
+
+&edp {
+	status = "okay";
+	vcc = "vcc1v8_s0";
+	force-hpd;
+	// /delete-node/ pinctrl-0;
+
+	ports {
+		edp_out: port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+		/*
+			edp_out_bridge: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&bridge_in_edp>;
+			};*/
+
+			edp_out_panel: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&panel_in_edp>;
+			};
+		};
+	};
+};
+
+&route_edp {
+	status = "okay";
+	connect = <&vopl_out_edp>;
+};
+
+&vopb_out_edp {
+	status = "disabled";
+};
+
+&vopl_out_edp {
+	status = "okay";
+};
+
+&edp_in_vopb {
+	status = "disabled";
+};
+
+&edp_in_vopl {
+	status = "okay";
+};
+
+&vopl {
+	status = "okay";
+};
+
+&vopb {
+	status = "okay";
 };
