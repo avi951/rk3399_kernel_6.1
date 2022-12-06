@@ -253,14 +253,14 @@ struct imx219 {
 
 static const struct imx219_mode supported_modes[] = {
 	{
-		.width =  640, //H
-		.height = 480, //V
+		.width =  800, //H
+		.height = 600, //V
 		.max_fps = {
 			.numerator = 10000,
 			.denominator = 600000,
 		},
-		.hts_def = 640+180,//+88+128+40,
-		.vts_def = 480+90,//+23+1+128,
+		.hts_def = 800+256,//+88+128+40,
+		.vts_def = 600+28,//+23+1+128,
 		.reg_list = imx219_init_tab_1920_1080_30fps,
 	},
 	{
