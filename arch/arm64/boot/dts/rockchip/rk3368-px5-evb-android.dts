@@ -51,7 +51,7 @@
 	model = "Rockchip PX5 EVB V11";
 	compatible = "rockchip,px5-evb", "rockchip,px5", "rockchip,rk3368";
 
-	chosen: chosen {
+	chosen {
 		bootargs = "earlycon=uart8250,mmio32,0xff1c0000 swiotlb=1 firmware_class.path=/system/vendor/firmware";
 	};
 
@@ -92,10 +92,12 @@
 	};
 
 	xin32k: xin32k {
-		compatible = "fixed-clock";
+		status = "okay";
+		compatible = "pwm-clock";
+		#clock-cells = <0>;
 		clock-frequency = <32768>;
 		clock-output-names = "xin32k";
-		#clock-cells = <0>;
+		pwms = <&pwm1 0 30518 0>; /* 1 / 30518 ns = 32.7675 KHz */
 	};
 
 	sdio_pwrseq: sdio-pwrseq {
@@ -312,6 +314,11 @@
 		backlight = <&backlight>;
 		prepare-delay-ms = <120>;
 		unprepare-delay-ms = <120>;
+		/*
+		 * MEDIA_BUS_FMT_RGB666_1X7X3_SPWG  - "jeida-18"
+		 * MEDIA_BUS_FMT_RGB888_1X7X4_JEIDA - "jeida-24"
+		 * MEDIA_BUS_FMT_RGB888_1X7X4_SPWG  - "vesa-24"
+		 */
 		bus-format = <MEDIA_BUS_FMT_RGB888_1X7X4_SPWG>;
 
 		display-timings {
@@ -913,6 +920,10 @@
 
 &uart2 {
 	status = "disabled";
+};
+
+&uart4 {
+	status = "okay";
 };
 
 &pinctrl {

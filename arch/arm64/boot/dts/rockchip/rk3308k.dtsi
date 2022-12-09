@@ -14,24 +14,18 @@
 };
 
 &cpu0_opp_table {
-	rockchip,high-temp = <55000>;
-	rockchip,high-temp-max-volt = <1125000>;
-};
-
-&rockchip_suspend {
-	rockchip,sleep-mode-config = <
-		(0
-		| RKPM_PMU_HW_PLLS_PD
-		| RKPM_DBG_FSM_SOUT
-		| RKPM_PWM_VOLTAGE_DEFAULT
-		)
-	>;
+	opp-408000000 {
+		/delete-property/ opp-suspend;
+	};
+	opp-1008000000 {
+		opp-suspend;
+	};
 };
 
 &thermal_zones {
 	soc-thermal {
-		sustainable-power = <422>;
-		k_pu = <6>;
+		sustainable-power = <308>;
+		k_pu = <8>;
 		k_po = <1024>;
 		k_i = <0>;
 

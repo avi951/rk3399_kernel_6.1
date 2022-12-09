@@ -460,6 +460,10 @@
 	status = "okay";
 };
 
+&uart2 {
+	status = "okay";
+};
+
 &usb_host0_ehci {
 	status = "okay";
 };

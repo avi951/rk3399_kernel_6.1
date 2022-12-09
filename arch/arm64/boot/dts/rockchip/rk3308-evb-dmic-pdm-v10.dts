@@ -41,10 +41,6 @@
 	};
 };
 
-&acodec {
-	rockchip,adc-grps-route = <3 0 1 2>;
-};
-
 &acodec_sound {
 	status = "disabled";
 };

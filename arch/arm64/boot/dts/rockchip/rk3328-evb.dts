@@ -49,7 +49,7 @@
 	compatible = "rockchip,rk3328-evb", "rockchip,rk3328";
 
 	chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xff130000 swiotlb=1 kpti=0 console=ttyFIQ0 root=PARTUUID=614e0000-0000 rootwait coherent_pool=1m";
+		bootargs = "earlycon=uart8250,mmio32,0xff130000 swiotlb=1 kpti=0 console=ttyFIQ0 root=PARTUUID=614e0000-0000 rootwait";
 	};
 
 	fiq-debugger {
@@ -83,17 +83,6 @@
 		clock-frequency = <125000000>;
 		clock-output-names = "gmac_clkin";
 		#clock-cells = <0>;
-	};
-
-	reserved-memory {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-
-		drm_logo: drm-logo@00000000 {
-			compatible = "rockchip,drm-logo";
-			reg = <0x0 0x0 0x0 0x0>;
-		};
 	};
 
 	sdio_pwrseq: sdio-pwrseq {
@@ -199,19 +188,6 @@
 		#clock-cells = <0>;
 	};
 
-	wireless-bluetooth {
-		compatible = "bluetooth-platdata";
-		clocks = <&rk805 1>;
-		clock-names = "ext_clock";
-		uart_rts_gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "default", "rts_gpio";
-		pinctrl-0 = <&uart0_rts>;
-		pinctrl-1 = <&uart0_gpios>;
-		BT,power_gpio = <&gpio1 21 GPIO_ACTIVE_HIGH>;
-		BT,wake_host_irq = <&gpio1 26 GPIO_ACTIVE_HIGH>;
-		status = "okay";
-	};
-
 	wireless-wlan {
 		compatible = "wlan-platdata";
 		rockchip,grf = <&grf>;
@@ -219,27 +195,6 @@
 		sdio_vref = <1800>;
 		WIFI,host_wake_irq = <&gpio1 19 GPIO_ACTIVE_HIGH>;
 		status = "okay";
-	};
-};
-
-&cif {
-	status = "okay";
-
-	port {
-		/* Parallel bus endpoint */
-		cif_para_in: endpoint {
-			remote-endpoint = <&cam_para_out1>;
-			bus-width = <8>;
-			hsync-active = <1>;
-			vsync-active = <0>;
-		};
-
-		/* MIPI CSI-2 endpoint */
-		/*
-		 * cif_mipi_in: endpoint {
-		 *	remote-endpoint = <&csi_host_output>;
-		 * };
-		 */
 	};
 };
 
@@ -252,29 +207,13 @@
 	cpu-supply = <&vdd_arm>;
 };
 
-&dfi {
-	status = "okay";
-};
-
 &dmc {
 	center-supply = <&vdd_logic>;
 	status = "okay";
 };
 
 &display_subsystem {
-	logo-memory-region = <&drm_logo>;
 	status = "okay";
-
-	route {
-		route_hdmi: route-hdmi {
-			status = "okay";
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "fullscreen";
-			charge_logo,mode = "fullscreen";
-			connect = <&vop_out_hdmi>;
-		};
-	};
 };
 
 &emmc {
@@ -330,52 +269,6 @@
 
 &hdmiphy {
 	status = "okay";
-};
-
-&i2c0 {
-	status = "okay";
-
-	gc2145: gc2145@3c {
-		status = "okay";
-		compatible = "galaxycore,gc2145";
-		reg = <0x3c>;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&dvp_d2d9_m1>;
-
-		reset-gpios = <&gpio0 27 GPIO_ACTIVE_LOW>; /* gpio0 d3 */
-		/*
-		 * pwdn gpio:conflict with gpio of vcc_otg_vbus
-		 */
-		pwdn-gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
-		rockchip,camera-module-index = <1>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "CMK-OT1055-FG1";
-		rockchip,camera-module-lens-name = "NC";
-
-		clocks = <&cru SCLK_CIF_OUT>;
-		clock-names = "xvclk";
-
-		port {
-			/* Parallel bus endpoint */
-			cam_para_out1: endpoint {
-				remote-endpoint = <&cif_para_in>;
-				bus-width = <8>;
-				hsync-active = <1>;
-				vsync-active = <0>;
-			};
-
-			/* MIPI CSI-2 endpoint */
-			/*
-			 * cam_mipi_out1: endpoint {
-			 *	remote-endpoint = <&mipi_sensor_input>;
-			 *	data-lanes = <1>;
-			 *	clock-lanes = <0>;
-			 *	clock-noncontinuous;
-			 * };
-			 */
-		};
-	};
 };
 
 &i2c1 {
@@ -568,13 +461,6 @@
 				<0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
-
-	wireless-bluetooth {
-		uart0_gpios: uart0-gpios {
-			rockchip,pins =
-				<1 10 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-	};
 };
 
 &pwm3 {
@@ -676,10 +562,6 @@
 	};
 };
 
-&rga {
-	status = "okay";
-};
-
 &rkvdec {
 	vcodec-supply = <&vdd_logic>;
 	status = "okay";
@@ -688,12 +570,6 @@
 &rockchip_suspend {
 	status = "okay";
 	rockchip,virtual-poweroff = <1>;
-};
-
-&uart0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart0_xfer &uart0_cts>;
-	status = "okay";
 };
 
 &saradc {

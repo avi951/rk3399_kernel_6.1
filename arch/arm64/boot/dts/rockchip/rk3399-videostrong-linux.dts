@@ -254,10 +254,6 @@
 	status = "okay";
 };
 
-&uart2 {
-	status = "disabled";
-};
-
 &vpu {
 	status = "okay";
 	/* 0 means ion, 1 means drm */

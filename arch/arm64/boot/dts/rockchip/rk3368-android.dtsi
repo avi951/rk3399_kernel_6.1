@@ -299,7 +299,8 @@
 					<1 7 RK_FUNC_1 &pcfg_pull_none>,//cif_data9
 					<1 8 RK_FUNC_1 &pcfg_pull_none>,//cif_sync
 					<1 9 RK_FUNC_1 &pcfg_pull_none>,//cif_href
-					<1 10 RK_FUNC_1 &pcfg_pull_none>;//cif_clkin
+					<1 10 RK_FUNC_1 &pcfg_pull_none>,//cif_clkin
+					<1 11 RK_FUNC_1 &pcfg_pull_none>;//cif_clkout
 		};
 
 		isp_dvp_d0d1: isp-dvp-d0d1 {
@@ -335,7 +336,7 @@
 					<1 6 RK_FUNC_1 &pcfg_pull_none>,//cif_data8
 					<1 7 RK_FUNC_1 &pcfg_pull_none>,//cif_data9
 					<1 14 RK_FUNC_1 &pcfg_pull_none>,//cif_data10
-					<1 15 RK_FUNC_1 &pcfg_pull_none>;//cif_data11
+					<1 17 RK_FUNC_1 &pcfg_pull_none>;//cif_data11
 		};
 
 		isp_shutter: isp-shutter {

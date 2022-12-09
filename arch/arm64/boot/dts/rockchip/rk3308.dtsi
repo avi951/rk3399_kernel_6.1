@@ -48,18 +48,10 @@
 			enable-method = "psci";
 			clocks = <&cru ARMCLK>;
 			#cooling-cells = <2>;
-			dynamic-power-coefficient = <83>;
+			dynamic-power-coefficient = <90>;
 			operating-points-v2 = <&cpu0_opp_table>;
 			cpu-idle-states = <&CPU_SLEEP>;
 			next-level-cache = <&l2>;
-			power-model {
-				compatible = "simple-power-model";
-				leakage-range= <5 50>;
-				ls = <6086 6346 (-63)>;
-				static-coefficient = <100000>;
-				ts = <(-109130) 101460 (-1620) 30>;
-				thermal-zone = "soc-thermal";
-			};
 		};
 
 		cpu1: cpu@1 {
@@ -390,8 +382,6 @@
 			mode-normal = <BOOT_NORMAL>;
 			mode-recovery = <BOOT_RECOVERY>;
 			mode-fastboot = <BOOT_FASTBOOT>;
-			mode-panic = <BOOT_PANIC>;
-			mode-watchdog = <BOOT_WATCHDOG>;
 		};
 	};
 
@@ -801,7 +791,7 @@
 		soc_thermal: soc-thermal {
 			polling-delay-passive = <20>;
 			polling-delay = <1000>;
-			sustainable-power = <360>;
+			sustainable-power = <300>;
 
 			thermal-sensors = <&tsadc 0>;
 
@@ -1004,7 +994,6 @@
 		rockchip,cru = <&cru>;
 		rockchip,grf = <&grf>;
 		rockchip,mclk-calibrate;
-		rockchip,io-multiplex;
 		status = "disabled";
 	};
 
@@ -1329,13 +1318,6 @@
 		};
 	};
 
-	rockchip_system_monitor: rockchip-system-monitor {
-		compatible = "rockchip,system-monitor";
-
-		rockchip,thermal-zone = "soc-thermal";
-		rockchip,polling-delay = <200>; /* milliseconds */
-	};
-
 	pinctrl: pinctrl {
 		compatible = "rockchip,rk3308-pinctrl";
 		rockchip,grf = <&grf>;
@@ -1480,13 +1462,6 @@
 
 		pcfg_input: pcfg-input {
 			input-enable;
-		};
-
-		ext_micbias {
-			ext_micbias_en: ext-micbias-en {
-				rockchip,pins =
-					<0 RK_PC2 0 &pcfg_pull_down>;
-			};
 		};
 
 		i2c0 {
@@ -1739,81 +1714,81 @@
 			lcdc_ctl: lcdc-ctl {
 				rockchip,pins =
 					/* dclk */
-					<1 RK_PA0 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA0 RK_FUNC_1 &pcfg_pull_none>,
 					/* hsync */
-					<1 RK_PA1 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA1 RK_FUNC_1 &pcfg_pull_none>,
 					/* vsync */
-					<1 RK_PA2 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA2 RK_FUNC_1 &pcfg_pull_none>,
 					/* den */
-					<1 RK_PA3 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA3 RK_FUNC_1 &pcfg_pull_none>,
 					/* d0 */
-					<1 RK_PA4 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA4 RK_FUNC_1 &pcfg_pull_none>,
 					/* d1 */
-					<1 RK_PA5 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA5 RK_FUNC_1 &pcfg_pull_none>,
 					/* d2 */
-					<1 RK_PA6 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA6 RK_FUNC_1 &pcfg_pull_none>,
 					/* d3 */
-					<1 RK_PA7 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PA7 RK_FUNC_1 &pcfg_pull_none>,
 					/* d4 */
-					<1 RK_PB0 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB0 RK_FUNC_1 &pcfg_pull_none>,
 					/* d5 */
-					<1 RK_PB1 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB1 RK_FUNC_1 &pcfg_pull_none>,
 					/* d6 */
-					<1 RK_PB2 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB2 RK_FUNC_1 &pcfg_pull_none>,
 					/* d7 */
-					<1 RK_PB3 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB3 RK_FUNC_1 &pcfg_pull_none>,
 					/* d8 */
-					<1 RK_PB4 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB4 RK_FUNC_1 &pcfg_pull_none>,
 					/* d9 */
-					<1 RK_PB5 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB5 RK_FUNC_1 &pcfg_pull_none>,
 					/* d10 */
-					<1 RK_PB6 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB6 RK_FUNC_1 &pcfg_pull_none>,
 					/* d11 */
-					<1 RK_PB7 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PB7 RK_FUNC_1 &pcfg_pull_none>,
 					/* d12 */
-					<1 RK_PC0 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PC0 RK_FUNC_1 &pcfg_pull_none>,
 					/* d13 */
-					<1 RK_PC1 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PC1 RK_FUNC_1 &pcfg_pull_none>,
 					/* d14 */
-					<1 RK_PC2 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PC2 RK_FUNC_1 &pcfg_pull_none>,
 					/* d15 */
-					<1 RK_PC3 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PC3 RK_FUNC_1 &pcfg_pull_none>,
 					/* d16 */
-					<1 RK_PC4 RK_FUNC_1 &pcfg_pull_none_4ma>,
+					<1 RK_PC4 RK_FUNC_1 &pcfg_pull_none>,
 					/* d17 */
-					<1 RK_PC5 RK_FUNC_1 &pcfg_pull_none_4ma>;
+					<1 RK_PC5 RK_FUNC_1 &pcfg_pull_none>;
 			};
 
 			lcdc_rgb888_m0: lcdc-rgb888-m0 {
 				rockchip,pins =
 					/* d18 */
-					<1 RK_PC6 RK_FUNC_6 &pcfg_pull_none_4ma>,
+					<1 RK_PC6 RK_FUNC_6 &pcfg_pull_none>,
 					/* d19 */
-					<1 RK_PC7 RK_FUNC_6 &pcfg_pull_none_4ma>,
+					<1 RK_PC7 RK_FUNC_6 &pcfg_pull_none>,
 					/* d20 */
-					<2 RK_PB1 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<2 RK_PB1 RK_FUNC_3 &pcfg_pull_none>,
 					/* d21 */
-					<2 RK_PB2 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<2 RK_PB2 RK_FUNC_3 &pcfg_pull_none>,
 					/* d22 */
-					<2 RK_PB7 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<2 RK_PB7 RK_FUNC_3 &pcfg_pull_none>,
 					/* d23 */
-					<2 RK_PC0 RK_FUNC_3 &pcfg_pull_none_4ma>;
+					<2 RK_PC0 RK_FUNC_3 &pcfg_pull_none>;
 			};
 
 			lcdc_rgb888_m1: lcdc-rgb888-m1 {
 				rockchip,pins =
 					/* d18 */
-					<3 RK_PA6 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<3 RK_PA6 RK_FUNC_3 &pcfg_pull_none>,
 					/* d19 */
-					<3 RK_PA7 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<3 RK_PA7 RK_FUNC_3 &pcfg_pull_none>,
 					/* d20 */
-					<3 RK_PB0 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<3 RK_PB0 RK_FUNC_3 &pcfg_pull_none>,
 					/* d21 */
-					<3 RK_PB1 RK_FUNC_3 &pcfg_pull_none_4ma>,
+					<3 RK_PB1 RK_FUNC_3 &pcfg_pull_none>,
 					/* d22 */
-					<3 RK_PB2 RK_FUNC_4 &pcfg_pull_none_4ma>,
+					<3 RK_PB2 RK_FUNC_4 &pcfg_pull_none>,
 					/* d23 */
-					<3 RK_PB3 RK_FUNC_4 &pcfg_pull_none_4ma>;
+					<3 RK_PB3 RK_FUNC_4 &pcfg_pull_none>;
 			};
 		};
 

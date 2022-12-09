@@ -47,8 +47,14 @@
 / {
 	compatible = "rockchip,android", "rockchip,rk3399";
 
-	chosen: chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1 coherent_pool=1m";
+	chosen {
+		bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1";
+	};
+
+	cpuinfo {
+		compatible = "rockchip,cpuinfo";
+		nvmem-cells = <&cpu_id>;
+		nvmem-cell-names = "id";
 	};
 
 	ramoops_mem: ramoops_mem {
@@ -164,11 +170,8 @@
 		compatible = "rockchip,rk3399-isp", "rockchip,isp";
 		reg = <0x0 0xff910000 0x0 0x4000>;
 		interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH 0>;
-		assigned-clocks = <&cru SCLK_CIF_OUT_SRC>;
-		assigned-clock-parents = <&cru PLL_GPLL>;
-		assigned-clock-rates = <800000000>;
 		clocks =
-			<&cru SCLK_CIF_OUT>, <&cru SCLK_CIF_OUT_SRC>,
+			<&cru SCLK_CIF_OUT>, <&cru SCLK_CIF_OUT>,
 			<&cru SCLK_DPHY_TX1RX1_CFG>, <&cru SCLK_MIPIDPHY_REF>,
 			<&cru ACLK_ISP0_NOC>, <&cru ACLK_ISP0_WRAPPER>,
 			<&cru HCLK_ISP0_NOC>, <&cru HCLK_ISP0_WRAPPER>,
@@ -179,8 +182,6 @@
 			"aclk_isp0_noc", "aclk_isp0_wrapper",
 			"hclk_isp0_noc", "hclk_isp0_wrapper",
 			"clk_isp0", "pclk_dphyrx";
-		resets = <&cru SRST_H_ISP0>, <&cru SRST_ISP0>;
-		reset-names = "h_isp0", "isp0";
 		pinctrl-names =
 			"cif_clkout", "isp_dvp8bit0", "isp_mipi_fl",
 			"isp_mipi_fl_prefl", "isp_flash_as_gpio",
@@ -211,7 +212,7 @@
 			<&cru ACLK_ISP1_NOC>, <&cru ACLK_ISP1_WRAPPER>,
 			<&cru HCLK_ISP1_NOC>, <&cru HCLK_ISP1_WRAPPER>,
 			<&cru SCLK_ISP1>, <&cru SCLK_CIF_OUT>,
-			<&cru SCLK_CIF_OUT_SRC>, <&cru SCLK_DPHY_TX1RX1_CFG>,
+			<&cru SCLK_CIF_OUT>, <&cru SCLK_DPHY_TX1RX1_CFG>,
 			<&cru SCLK_MIPIDPHY_REF>, <&cru PCLK_ISP1_WRAPPER>,
 			<&cru SCLK_DPHY_RX0_CFG>, <&cru PCLK_MIPI_DSI1>,
 			<&cru SCLK_MIPIDPHY_CFG>;
@@ -223,8 +224,6 @@
 			"pclk_dphy_ref", "pclk_isp1",
 			"pclk_dphyrx", "pclk_mipi_dsi",
 			"mipi_dphy_cfg";
-		resets = <&cru SRST_H_ISP1>, <&cru SRST_ISP1>;
-		reset-names = "h_isp1", "isp1";
 		pinctrl-names =
 			"cif_clkout", "isp_dvp8bit0", "isp_mipi_fl",
 			"isp_mipi_fl_prefl", "isp_flash_as_gpio",
@@ -365,10 +364,6 @@
 };
 
 &pvtm {
-	status = "okay";
-};
-
-&rng {
 	status = "okay";
 };
 
