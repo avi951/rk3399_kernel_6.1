@@ -17,8 +17,7 @@
 # limitations under the License.
 
 # Enviromental Variables
-DATE=$(date +"%d.%m.%y.%s")
-CSUM=$(cksum <<<${DATE} | cut -f 1 -d ' ')
+DATE=$(date +"%d.%m.%y")
 
 OUT_DIR=$(pwd)/out
 
@@ -26,7 +25,7 @@ OUT_DIR=$(pwd)/out
 # bc bison flex build-essential gcc libssl-dev libncurses5-dev
 
 #PATH=$HOME/gcc-arm64/bin:$HOME/gcc-arm/bin:$PATH
-FILENAME="${OUT_DIR}/boot-${CSUM}.img"
+FILENAME="${OUT_DIR}/boot-${DATE}.img"
 KERNEL_IMAGE="${OUT_DIR}/arch/arm64/boot/Image"
 DTB_FILE="${OUT_DIR}/arch/arm64/boot/dts/rockchip/rockpi-4b-linux.dtb"
 
