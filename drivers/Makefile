@@ -6,7 +6,7 @@
 #
 
 obj-y				+= irqchip/
-obj-y				+= bus/
+obj-y				+= bus/ boardinfo.o
 
 obj-$(CONFIG_GENERIC_PHY)	+= phy/
 

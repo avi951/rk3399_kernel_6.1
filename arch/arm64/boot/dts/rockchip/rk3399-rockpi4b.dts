@@ -264,6 +264,22 @@
 		status = "okay";
 	};
 
+	vaaman_boardinfo: vaaman-boardinfo {
+		compatible = "vaaman-boardinfo";
+
+		// wlan host wake gpio (gpio value: 0)
+		hwid0 = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+
+		// gpio eDP : (gpio value 0)
+		hwid1 = <&gpio3 RK_PD6 GPIO_ACTIVE_LOW>;
+
+		// vcc pcie : (gpio value 1)
+		hwid2 = <&gpio2 26 GPIO_ACTIVE_LOW>;
+
+		// vcc otg : (gpio value 1)
+		hwid3 = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+	};
+
 	wireless-bluetooth {
 		compatible = "bluetooth-platdata";
 		clocks = <&rk808 1>;
