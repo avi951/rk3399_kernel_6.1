@@ -121,3 +121,6 @@ all.config
 # fetched Android config fragments
 android/configs/android-*.cfg
 out/
+
+# Ignore build logs
+build.log
