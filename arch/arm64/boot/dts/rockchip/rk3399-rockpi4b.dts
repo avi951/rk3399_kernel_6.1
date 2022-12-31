@@ -268,16 +268,16 @@
 		compatible = "vaaman-boardinfo";
 
 		// wlan host wake gpio (gpio value: 0)
-		hwid0 = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+		hw_id0 = <&gpio0 3 GPIO_ACTIVE_HIGH>;
 
 		// gpio eDP : (gpio value 0)
-		hwid1 = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
+		hw_id1 = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
 
 		// vcc pcie : (gpio value 1)
-		hwid2 = <&gpio2 26 GPIO_ACTIVE_HIGH>;
+		hw_id2 = <&gpio2 26 GPIO_ACTIVE_HIGH>;
 
 		// vcc otg : (gpio value 1)
-		hwid3 = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+		hw_id3 = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 	};
 
 	wireless-bluetooth {
