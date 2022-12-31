@@ -1454,7 +1454,6 @@ static int rockchip_drm_bind(struct device *dev)
 
 	drm_mode_config_init(drm_dev);
 
-	dev_err(dev, "~~~~~~~~~~~~~%s calling func named rockchip_drm_mode_config_init\n", __func__);
 	rockchip_drm_mode_config_init(drm_dev);
 	rockchip_drm_create_properties(drm_dev);
 

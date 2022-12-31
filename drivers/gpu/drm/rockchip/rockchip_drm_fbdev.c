@@ -103,14 +103,6 @@ static int rockchip_drm_fbdev_create(struct drm_fb_helper *helper,
 		goto err_rockchip_gem_free_object;
 	}
 
-	dev_err(dev->dev, "%s mode_cmd.width is %d\n", __func__, mode_cmd.width);
-	dev_err(dev->dev, "%s mode_cmd.height is %d\n", __func__, mode_cmd.height);
-	if(mode_cmd.width == 800 && mode_cmd.height == 600) {
-		dev_err(dev->dev, "%s not initializing framebuffer as res is 800x600\n", __func__);
-		ret = 0;
-		goto err_rockchip_gem_free_object;
-	}
-
 	helper->fb = rockchip_drm_framebuffer_init(dev, &mode_cmd,
 						   private->fbdev_bo);
 	if (IS_ERR(helper->fb)) {
@@ -187,27 +179,10 @@ int rockchip_drm_fbdev_init(struct drm_device *dev)
 		goto err_drm_fb_helper_fini;
 	}
 
-	if(helper != NULL && (*helper->connector_info)!= NULL) {
-		if((*helper->connector_info)->connector->name != NULL)
-			dev_err(dev->dev, "%s connector name is : %s\n", __func__, (*helper->connector_info)->connector->name);
-		else
-			dev_err(dev->dev, "%s conector name is NULL\n", __func__);
-	} else {
-		dev_err(dev->dev, "%s helper or connector_info is NULL\n", __func__);
-	}
-
 	ret = drm_fb_helper_initial_config(helper, PREFERRED_BPP);
 	if (ret < 0) {
 		dev_err(dev->dev, "Failed to set initial hw config - %d.\n",
 			ret);
-		goto err_drm_fb_helper_fini;
-	}
-
-	dev_err(dev->dev, "%s width is %d\n", __func__, helper->fb->width);
-	dev_err(dev->dev, "%s height is %d\n", __func__, helper->fb->height);
-	if(helper->fb->width == 800 && helper->fb->height == 600) {
-		dev_err(dev->dev, "%s not initializing framebuffer as res is 800x600\n", __func__);
-		ret = 0;
 		goto err_drm_fb_helper_fini;
 	}
 

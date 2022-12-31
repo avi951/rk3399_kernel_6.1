@@ -104,11 +104,7 @@ int drm_fb_helper_single_add_all_connectors(struct drm_fb_helper *fb_helper)
 {
 	struct drm_device *dev = fb_helper->dev;
 	struct drm_connector *connector;
-	char *name;
 	int i;
-	char *req_name = "eDP-1";
-
-	dev_err(dev->dev, "%s req_name is: %s\n", __func__, req_name);
 
 	if (!drm_fbdev_emulation)
 		return 0;
@@ -116,17 +112,6 @@ int drm_fb_helper_single_add_all_connectors(struct drm_fb_helper *fb_helper)
 	mutex_lock(&dev->mode_config.mutex);
 	drm_for_each_connector(connector, dev) {
 		struct drm_fb_helper_connector *fb_helper_connector;
-		
-		// if(connector != NULL && connector->name != NULL) {
-		// 	if(!strcmp(req_name, connector->name)) {
-		// 		dev_err(dev->dev, "%s : not adding connector as it is: %s\n", __func__, connector->name);
-		// 		continue;
-		// 	} else {
-		// 		dev_err(dev->dev, "%s : Adding connector as it is different from %s\n", __func__, req_name);
-		// 	}
-		// } else {
-		// 	dev_err(dev->dev, "%s connector or connector->name is NULL\n", __func__);
-		// }
 
 		fb_helper_connector = kzalloc(sizeof(struct drm_fb_helper_connector), GFP_KERNEL);
 		if (!fb_helper_connector)
@@ -134,12 +119,6 @@ int drm_fb_helper_single_add_all_connectors(struct drm_fb_helper *fb_helper)
 
 		fb_helper_connector->connector = connector;
 		fb_helper->connector_info[fb_helper->connector_count++] = fb_helper_connector;
-
-		name = fb_helper_connector->connector->name;
-		if(name != NULL)
-			dev_err(dev->dev, "%s name of connector is: %s\n", __func__, name);
-		else
-			dev_err(dev->dev, "%s name of connector is NULL\n", __func__);
 	}
 	mutex_unlock(&dev->mode_config.mutex);
 	return 0;
@@ -720,7 +699,6 @@ int drm_fb_helper_init(struct drm_device *dev,
 		kfree(fb_helper->crtc_info);
 		return -ENOMEM;
 	}
-
 	fb_helper->connector_info_alloc_count = dev->mode_config.num_connector;
 	fb_helper->connector_count = 0;
 
@@ -742,15 +720,6 @@ int drm_fb_helper_init(struct drm_device *dev,
 	}
 
 	fb_helper->atomic = !!drm_core_check_feature(dev, DRIVER_ATOMIC);
-
-	if((*fb_helper->connector_info) != NULL) {
-		if((*fb_helper->connector_info)->connector->name != NULL)
-			dev_err(dev->dev, "%s connector name is : %s", __func__, (*fb_helper->connector_info)->connector->name);
-		else
-			dev_err(dev->dev, "%s connector name is NULL\n", __func__);
-	} else {
-		dev_err(dev->dev, "%s connector_info is NULL\n", __func__);
-	}
 
 	return 0;
 out_free:

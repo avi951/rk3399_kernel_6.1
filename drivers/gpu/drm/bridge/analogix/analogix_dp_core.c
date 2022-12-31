@@ -152,7 +152,6 @@ analogix_dp_set_lane_lane_pre_emphasis(struct analogix_dp_device *dp,
 	case 2:
 		analogix_dp_set_lane2_pre_emphasis(dp, pre_emphasis);
 		break;
-		
 
 	case 3:
 		analogix_dp_set_lane3_pre_emphasis(dp, pre_emphasis);

@@ -91,7 +91,7 @@ fallback:
 	ret = drm_add_modes_noedid(connector, 1920, 1200);
 
 	/* And prefer a mode pretty much anyone can handle */
-	drm_set_preferred_mode(connector, 800, 600);
+	drm_set_preferred_mode(connector, 1280, 1024);
 
 	return ret;
 }
@@ -113,9 +113,9 @@ lt7911d_connector_detect(struct drm_connector *connector, bool force)
 	 */
 
 	if (!IS_ERR(lt7911d->ddc) && drm_probe_ddc(lt7911d->ddc))
-		return connector_status_disconnected;
+		return connector_status_connected;
 
-	return connector_status_disconnected;
+	return connector_status_connected;
 }
 
 static const struct drm_connector_funcs lt7911d_con_funcs = {
@@ -178,7 +178,7 @@ static void lt7911d_disable(struct drm_bridge *bridge)
 		regulator_disable(lt7911d->vdd);
 
 	if (lt7911d->gpio_rst)
-		gpiod_set_value(lt7911d->gpio_rst, 1); //1 for rockpro
+		gpiod_set_value(lt7911d->gpio_rst, 0); //1 for rockpro
 }
 
 static const struct drm_bridge_funcs lt7911d_bridge_funcs = {
@@ -283,8 +283,8 @@ static const struct drm_display_mode lt7911d_mode = {
 	.clock = 40000,
 	.hdisplay = 800,
 	.hsync_start = 800 + 40,
-	.hsync_end = 800 + 40 + 128,
-	.htotal = 800 + 40 + 128 + 88,
+	.hsync_end = 800 + 48 + 32,
+	.htotal = 800 + 48 + 128 + 88,
 	.vdisplay = 600,
 	.vsync_start = 600 + 1,
 	.vsync_end = 600 + 1 + 4,
@@ -298,8 +298,8 @@ static const struct lt7911d_desc lt7911d = {
 	.num_modes = 1,
 	.bpc = 8,
 	.size = {
-		.width = 277,
-		.height = 208,
+		.width = 300,
+		.height = 250,
 	},
 	.bus_format = MEDIA_BUS_FMT_RGB888_1X24,
 };

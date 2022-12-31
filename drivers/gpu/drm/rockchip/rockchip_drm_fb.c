@@ -27,8 +27,6 @@
 #include "rockchip_drm_gem.h"
 #include "rockchip_drm_backlight.h"
 
-int count_func;
-
 bool rockchip_fb_is_logo(struct drm_framebuffer *fb)
 {
 	struct rockchip_drm_fb *rk_fb = to_rockchip_fb(fb);
@@ -63,8 +61,6 @@ static void rockchip_drm_fb_destroy(struct drm_framebuffer *fb)
 	struct drm_gem_object *obj;
 	int i;
 
-	pr_err("-------------- startng %s\n", __func__);
-
 	for (i = 0; i < ROCKCHIP_MAX_FB_BUFFER; i++) {
 		obj = rockchip_fb->obj[i];
 		if (obj)
@@ -80,9 +76,6 @@ static void rockchip_drm_fb_destroy(struct drm_framebuffer *fb)
 
 	drm_framebuffer_cleanup(fb);
 	kfree(rockchip_fb);
-
-	pr_err("%s successfully completed-----------------------\n", __func__);
-
 }
 
 static int rockchip_drm_fb_create_handle(struct drm_framebuffer *fb,
@@ -111,9 +104,6 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
 	struct drm_fb_helper *fb_helper = private->fbdev_helper;
 	int ret = 0;
 	int i;
-	unsigned int width, height;
-
-	dev_err(dev->dev, "^^^^^^^^^^^^^^^^^^^^^^^starting %s\n", __func__);
 
 	rockchip_fb = kzalloc(sizeof(*rockchip_fb), GFP_KERNEL);
 	if (!rockchip_fb)
@@ -128,14 +118,6 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
 			ret);
 		goto err_free_fb;
 	}
-
-	width = mode_cmd->width;
-	height = mode_cmd->height;
-	// if(width == 800 && height == 600) {
-	// 	dev_err(dev->dev, "releasing fb as resolution is %dX%d\n", width, height);
-	// 	ret = 0;
-	// 	goto err_deinit_drm_fb;
-	// }
 
 	if (obj) {
 		for (i = 0; i < num_planes; i++)
@@ -162,8 +144,6 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
 		goto err_deinit_drm_fb;
 	}
 
-	dev_err(dev->dev, "%s successfully completed^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n", __func__);
-
 	return &rockchip_fb->fb;
 
 err_deinit_drm_fb:
@@ -180,32 +160,16 @@ rockchip_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
 	struct drm_framebuffer *fb;
 	struct drm_gem_object *objs[ROCKCHIP_MAX_FB_BUFFER];
 	struct drm_gem_object *obj;
-	struct rockchip_drm_private *private = dev->dev_private;
-	struct drm_fb_helper *fb_helper = private->fbdev_helper;
-	struct drm_connector *connector;
 	unsigned int hsub;
 	unsigned int vsub;
 	int num_planes;
 	int ret;
 	int i;
 
-	dev_err(dev->dev, "--------------- starting %s for %d times\n", __func__, count_func);
-
-	if(fb_helper != NULL && *fb_helper->connector_info != NULL) {
-		if((*fb_helper->connector_info)->connector->name != NULL)
-			dev_err(dev->dev, "%s connecter name is : %s\n", __func__, (*fb_helper->connector_info)->connector->name);
-		else
-			dev_err(dev->dev, "%s connector name is NULL\n", __func__);
-	} else {
-		dev_err(dev->dev, "%s fb_helper or *fb_helper->connector_info is NULL\n", __func__);
-	}
-
 	hsub = drm_format_horz_chroma_subsampling(mode_cmd->pixel_format);
 	vsub = drm_format_vert_chroma_subsampling(mode_cmd->pixel_format);
 	num_planes = min(drm_format_num_planes(mode_cmd->pixel_format),
 			 ROCKCHIP_MAX_FB_BUFFER);
-
-	dev_err(dev->dev, "num of planes are: %d\n", num_planes);
 
 	for (i = 0; i < num_planes; i++) {
 		unsigned int width = mode_cmd->width / (i ? hsub : 1);
@@ -213,20 +177,6 @@ rockchip_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
 		unsigned int min_size;
 		unsigned int bpp =
 			drm_format_plane_bpp(mode_cmd->pixel_format, i);
-
-		dev_err(dev->dev, "width earlier is: %d\n", mode_cmd->width);
-		dev_err(dev->dev, "height earlier is: %d\n", mode_cmd->height);
-
-		dev_err(dev->dev, "width is: %d\n", width);
-		dev_err(dev->dev, "height is: %d\n", height);
-		dev_err(dev->dev, "bpp is: %d\n", bpp);
-
-		if(width == 800 && height == 600) {
-			dev_err(dev->dev, "%s breaking for loop for current fb as res is greater then 800x600\n", __func__);
-			continue;
-		} else {
-			dev_err(dev->dev, "%s no problem in for loop\n", __func__);
-		}
 
 		obj = drm_gem_object_lookup(dev, file_priv,
 					    mode_cmd->handles[i]);
@@ -253,24 +203,6 @@ rockchip_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
 		ret = PTR_ERR(fb);
 		goto err_gem_object_unreference;
 	}
-
-	// dev_err(dev->dev, "%s my width is : %d\n", __func__, mode_cmd->width);
-	// dev_err(dev->dev, "%s my height is : %d\n", __func__, mode_cmd->height);
-
-	// if(mode_cmd->width == 800 && mode_cmd->height == 600) {
-	// 	dev_err(dev->dev, "%s removing fb as res is 800x600\n", __func__);
-	// 	drm_framebuffer_remove(fb);
-	// } else {
-	// 	dev_err(dev->dev, "%s No need to remove framebuffer\n", __func__);
-	// }
-
-	count_func++;
-
-	dev_err(dev->dev, "%s fb width is %d\n", __func__, fb->width);
-	dev_err(dev->dev, "%s fb height is %d\n", __func__, fb->height);
-	dev_err(dev->dev, "%s fb bpp is %d\n", __func__, fb->bits_per_pixel);
-
-	dev_err(dev->dev, "%s successfully completed-----------------------\n", __func__);
 
 	return fb;
 
@@ -464,22 +396,15 @@ rockchip_drm_framebuffer_init(struct drm_device *dev,
 {
 	struct drm_framebuffer *fb;
 
-	dev_err(dev->dev, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!starting %s\n", __func__);
-
 	fb = rockchip_fb_alloc(dev, mode_cmd, &obj, NULL, 1);
 	if (IS_ERR(fb))
 		return NULL;
-
-	dev_err(dev->dev, "%s successfully completed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", __func__);
 
 	return fb;
 }
 
 void rockchip_drm_mode_config_init(struct drm_device *dev)
 {
-
-	dev_err(dev->dev, "```````````````````````````````starting %s\n", __func__);
-
 	dev->mode_config.min_width = 0;
 	dev->mode_config.min_height = 0;
 
@@ -492,9 +417,5 @@ void rockchip_drm_mode_config_init(struct drm_device *dev)
 	dev->mode_config.max_height = 8192;
 	dev->mode_config.async_page_flip = true;
 
-	count_func = 0;
-
 	dev->mode_config.funcs = &rockchip_drm_mode_config_funcs;
-
-	dev_err(dev->dev, "%s completed successfully```````````````````````````````\n", __func__);
 }

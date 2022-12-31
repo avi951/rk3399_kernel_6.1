@@ -250,19 +250,7 @@ static int rockchip_dp_drm_encoder_loader_protect(struct drm_encoder *encoder,
 	return 0;
 }
 
-static void rockchip_dp_drm_connecter_save(struct drm_encoder *encoder, struct drm_connector *connector)
-{
-	struct rockchip_dp_device *dp = to_dp(encoder);
-	struct drm_connector *connector_save = connector;
-
-	dev_err(dp->dev, "saved connector name is: %s", connector_save->name);
-	dev_err(dp->dev, "saved connector type is: %d", connector_save->connector_type);
-
-	return;
-}
-
 static struct drm_encoder_helper_funcs rockchip_dp_encoder_helper_funcs = {
-	.save = rockchip_dp_drm_connecter_save,
 	.mode_fixup = rockchip_dp_drm_encoder_mode_fixup,
 	.mode_set = rockchip_dp_drm_encoder_mode_set,
 	.enable = rockchip_dp_drm_encoder_enable,

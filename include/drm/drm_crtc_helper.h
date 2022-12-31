@@ -141,7 +141,7 @@ struct drm_crtc_helper_funcs {
 struct drm_encoder_helper_funcs {
 	int (*loader_protect)(struct drm_encoder *encoder, bool on);
 	void (*dpms)(struct drm_encoder *encoder, int mode);
-	void (*save)(struct drm_encoder *encoder, struct drm_connector *connector);
+	void (*save)(struct drm_encoder *encoder);
 	void (*restore)(struct drm_encoder *encoder);
 
 	bool (*mode_fixup)(struct drm_encoder *encoder,
