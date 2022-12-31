@@ -1,3 +1,5 @@
+/* Copyright (C) 2022 Vicharak */
+
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/module.h>
@@ -9,7 +11,7 @@
 #include <linux/proc_fs.h>
 #include "boardinfo.h"
 
-static int boardid0 = -1, boardid1 = -1;
+static int boardid[2] = { -1, -1 };
 
 static const struct of_device_id of_boardinfo_match[] = {
 	{ .compatible = "vaaman-boardinfo", },
@@ -21,11 +23,13 @@ static int boardinfo_show(struct seq_file *m, void *v)
 {
 	char *boardinfo = NULL;
 
-	if (boardid1 == 0xc && boardid0 == 0x3)
+	/* TODO: Use asymmetric key encryption to encrypt the boardinfo */
+
+	if (boardid[0] == 0xc && boardid[1] == 0x3)
 		boardinfo = "sss3kk2aaaa4";
 	else
-		pr_info("%s: boardid: %x %x is incorrect\n",
-			__func__, boardid0, boardid1);
+		pr_err("%s: boardid: %x %x is incorrect\n",
+		       __func__, boardid[0], boardid[1]);
 
 	seq_printf(m, "%s\n", boardinfo);
 	return 0;
@@ -46,10 +50,13 @@ static int boardinfo_proc_create(char *proc_name)
 {
 	struct proc_dir_entry *file = NULL;
 
+	/* Create read only proc entry */
 	file = proc_create(proc_name, 0444, NULL, &boardinfo_ops);
 
-	if (!file)
+	if (!file) {
+		pr_err("%s: Failed to create proc entry\n", __func__);
 		return -ENOMEM;
+	}
 
 	return 0;
 }
@@ -61,15 +68,18 @@ static int boardinfo_get_gpio_value(struct device *dev,
 
 	hwid = of_get_named_gpio(dev->of_node, gpio_name, 0);
 	if (!gpio_is_valid(hwid)) {
-		pr_info("%s: %s pin not available in board!\n", __func__, gpio_name);
+		pr_err("%s: %s pin not available in board!\n",
+		       __func__, gpio_name);
 		return -ENODEV;
 	}
 
 	/* set gpio direction as input */
 	if (flag) {
-		ret = devm_gpio_request_one(dev, hwid, GPIOF_DIR_OUT, gpio_name);
+		ret = devm_gpio_request_one(dev,
+					    hwid, GPIOF_DIR_OUT, gpio_name);
 		if (ret < 0) {
-			pr_info("%s: Failed to set %s pin\n", __func__, gpio_name);
+			pr_err("%s: Failed to set %s pin\n",
+			       __func__, gpio_name);
 			return ret;
 		}
 	}
@@ -85,41 +95,63 @@ static int boardinfo_get_gpio_value(struct device *dev,
 	return ret;
 }
 
+static int boardinfo_create_boardid(int *id, int size)
+{
+	if (size != 4) {
+		pr_err("%s: boardid size is incorrect\n", __func__);
+		return -EINVAL;
+	}
+
+	/* Convert the id bits to a hw id */
+	boardid[0] = (id[0] << 3) + (id[1] << 2) + (id[2] << 1) + id[3];
+	boardid[1] = (id[3] << 3) + (id[2] << 2) + (id[1] << 1) + id[0];
+
+	pr_info("%s: board id: 0x%x0x%x\n", __func__, boardid[0], boardid[1]);
+
+	return 0;
+}
+
 static int boardinfo_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	/* take three id bits to generate a hw id */
-	int id0, id1, id2, id3;
+	int id[4] = { -1, -1, -1, -1 };
 	int ret = 0;
 
-	id0 = boardinfo_get_gpio_value(dev, "hwid0", 1);
-	if (id0 < 0) {
-		pr_info("%s: Failed to get hwid0\n", __func__);
-		ret = -ENODEV;
+	ret = boardinfo_get_gpio_value(dev, "hwid0", 1);
+	if (ret < 0) {
+		pr_err("%s: Failed to get hwid0\n", __func__);
+		return ret;
 	}
+	id[0] = ret;
 
-	id1 = boardinfo_get_gpio_value(dev, "hwid1", 1);
-	if (id1 < 0) {
-		pr_info("%s: Failed to get hwid1\n", __func__);
-		ret = -ENODEV;
+	ret = boardinfo_get_gpio_value(dev, "hwid1", 1);
+	if (ret < 0) {
+		pr_err("%s: Failed to get hwid1\n", __func__);
+		return ret;
 	}
+	id[1] = ret;
 
-	id2 = boardinfo_get_gpio_value(dev, "hwid2", 0);
-	if (id2 < 0) {
-		pr_info("%s: Failed to get hwid2\n", __func__);
-		ret = -ENODEV;
+	ret = boardinfo_get_gpio_value(dev, "hwid2", 0);
+	if (ret < 0) {
+		pr_err("%s: Failed to get hwid2\n", __func__);
+		return ret;
 	}
+	id[2] = ret;
 
-	id3 = boardinfo_get_gpio_value(dev, "hwid3", 0);
-	if (id3 < 0) {
-		pr_info("%s: Failed to get hwid3\n", __func__);
-		ret = -ENODEV;
+	ret = boardinfo_get_gpio_value(dev, "hwid3", 0);
+	if (ret < 0) {
+		pr_err("%s: Failed to get hwid3\n", __func__);
+		return ret;
 	}
+	id[3] = ret;
 
-	/* Convert the id bits to a hw id */
-	boardid0 = (id0 << 3) + (id1 << 2) + (id2 << 1) + id3;
-	boardid1 = (id3 << 3) + (id2 << 2) + (id1 << 1) + id0;
-	pr_info("%s: boardid: %x %x\n", __func__, boardid0, boardid1);
+	/* get board id from id bits in boardid */
+	ret = boardinfo_create_boardid(id, ARRAY_SIZE(id));
+	if (ret < 0) {
+		pr_err("%s: Failed to create boardid\n", __func__);
+		return ret;
+	}
 
 	ret = boardinfo_proc_create("boardinfo");
 	if (ret < 0) {
@@ -127,9 +159,7 @@ static int boardinfo_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	pr_info("ret value : %d\n", ret);
-
-	return ret;
+	return 0;
 }
 
 static int boardinfo_remove(struct platform_device *pdev)
