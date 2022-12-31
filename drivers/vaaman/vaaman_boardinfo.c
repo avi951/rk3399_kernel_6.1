@@ -2,30 +2,35 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/platform_device.h>
+#include "vaaman_boardinfo.h"
+#include <linux/crypto.h>
+#include <linux/errno.h>
 #include <linux/gpio.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/of_gpio.h>
 #include <linux/of_platform.h>
+#include <linux/platform_device.h>
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
-#include <linux/errno.h>
-#include "vaaman_boardinfo.h"
 
-#define BOARDINFO_NAME "vaaman-boardinfo"
-#define BOARDINFO_PROC_MODE 0444
 #define BOARDINFO_HWID_MAX_LEN 4
 #define BOARDINFO_ID_MAX_LEN 2
+#define BOARDINFO_NAME "vaaman-boardinfo"
+#define BOARDINFO_PROC_MODE 0444
 
 struct boardinfo_data {
+	struct crypto_cipher *tfm;
 	struct device *dev;
-	struct proc_dir_entry *proc_file;
 	int hw_id[BOARDINFO_HWID_MAX_LEN];
+	struct proc_dir_entry *proc_file;
+	struct proc_dir_entry *proc_test_file;
 	int board_id[BOARDINFO_ID_MAX_LEN];
 };
 
 static struct boardinfo_data *boardinfo;
+#define SECRET_STRING "sss3kk2aaaa4"
+char secret[32] = SECRET_STRING;
 
 static const struct of_device_id of_boardinfo_match[] = {
 	{ .compatible = BOARDINFO_NAME, },
@@ -33,19 +38,146 @@ static const struct of_device_id of_boardinfo_match[] = {
 };
 MODULE_DEVICE_TABLE(of, of_boardinfo_match);
 
+/* print secret */
+static void boardinfo_print_secret(char *type, char *secret)
+{
+	int i;
+
+	pr_info("%s: %s: ", __func__, type);
+	for (i = 0; i < 32; i++)
+		pr_info("%x ", secret[i]);
+	pr_info("\n");
+}
+
 static int boardinfo_show(struct seq_file *m, void *v)
 {
-	char *secret = NULL;
+	unsigned int block_size;
+	char *padding;
+	int blocks = 0;
+	int i;
 
-	/* TODO: Use asymmetric key encryption to encrypt the boardinfo */
+	if (boardinfo->board_id[0] == 0xc && boardinfo->board_id[1] == 0x3) {
+		if (!strncmp(secret, SECRET_STRING, 32))
+			pr_err("correct secret string\n");
 
-	if (boardinfo->board_id[0] == 0xc && boardinfo->board_id[1] == 0x3)
-		secret = "sss3kk2aaaa4";
-	else
+		/* print secret */
+		boardinfo_print_secret("Secret", secret);
+
+		/* Allocate a cipher handle */
+		boardinfo->tfm = crypto_alloc_cipher("aes", 0, 0);
+		if (IS_ERR(boardinfo->tfm)) {
+			pr_err("Failed to load transform for aes\n");
+			return PTR_ERR(boardinfo->tfm);
+		}
+
+		/* Set the key */
+		if (crypto_cipher_setkey(boardinfo->tfm, secret, 32)) {
+			crypto_free_cipher(boardinfo->tfm);
+			pr_err("Invalid key for aes\n");
+			return -EINVAL;
+		}
+
+		/* block size */
+		block_size = crypto_cipher_blocksize(boardinfo->tfm);
+		if (!block_size) {
+			crypto_free_cipher(boardinfo->tfm);
+			pr_err("Invalid block size for aes\n");
+			return -EINVAL;
+		}
+
+		/* padding */
+		padding = kzalloc(block_size + 1, GFP_KERNEL);
+		if (!padding) {
+			crypto_free_cipher(boardinfo->tfm);
+			pr_err("Failed to allocate padding\n");
+			return -ENOMEM;
+		}
+
+		/* encrypt secret */
+		blocks = 32 / block_size;
+		for (i = 0; i < blocks; i++) {
+			crypto_cipher_encrypt_one(
+					boardinfo->tfm,
+					secret + i * block_size,
+					secret + i * block_size);
+		}
+
+		/* print encrypted secret */
+		boardinfo_print_secret("Encrypted Secret", secret);
+
+		/* Free */
+		crypto_free_cipher(boardinfo->tfm);
+		kfree(padding);
+
+	} else {
 		pr_err("%s: boardid: %x %x is incorrect\n",
 		       __func__,
 				boardinfo->board_id[0],
 				boardinfo->board_id[1]);
+	}
+
+	seq_printf(m, "%s\n", secret);
+	return 0;
+}
+
+static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
+{
+	unsigned int block_size;
+	char *padding;
+	int blocks = 0;
+	int i;
+
+	if (!strncmp(secret, SECRET_STRING, 32))
+		pr_err("correct secret string\n");
+
+	/* print secret */
+	boardinfo_print_secret("Enc Secret", secret);
+
+	/* Allocate a cipher handle */
+	boardinfo->tfm = crypto_alloc_cipher("aes", 0, 0);
+	if (IS_ERR(boardinfo->tfm)) {
+		pr_err("Failed to load transform for aes\n");
+		return PTR_ERR(boardinfo->tfm);
+	}
+
+	/* Set the key */
+	if (crypto_cipher_setkey(boardinfo->tfm, secret, 32)) {
+		crypto_free_cipher(boardinfo->tfm);
+		pr_err("Invalid key for aes\n");
+		return -EINVAL;
+	}
+
+	/* block size */
+	block_size = crypto_cipher_blocksize(boardinfo->tfm);
+	if (!block_size) {
+		crypto_free_cipher(boardinfo->tfm);
+		pr_err("Invalid block size for aes\n");
+		return -EINVAL;
+	}
+
+	/* padding */
+	padding = kzalloc(block_size + 1, GFP_KERNEL);
+	if (!padding) {
+		crypto_free_cipher(boardinfo->tfm);
+		pr_err("Failed to allocate padding\n");
+		return -ENOMEM;
+	}
+
+	/* decrypt secret */
+	blocks = 32 / block_size;
+	for (i = 0; i < blocks; i++) {
+		crypto_cipher_decrypt_one(
+				boardinfo->tfm,
+				secret + i * block_size,
+				secret + i * block_size);
+	}
+
+	/* print decrypted secret */
+	boardinfo_print_secret("Decrypted Secret", secret);
+
+	/* Free */
+	crypto_free_cipher(boardinfo->tfm);
+	kfree(padding);
 
 	seq_printf(m, "%s\n", secret);
 	return 0;
@@ -72,6 +204,34 @@ static int boardinfo_proc_create(void)
 
 	/* Check if proc entry is created */
 	if (!boardinfo->proc_file) {
+		pr_err("%s: Failed to create proc entry\n", __func__);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static int boardinfo_decrypt_test_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, boardinfo_decrypt_test_show, NULL);
+}
+
+static const struct file_operations boardinfo_decrypt_test_ops = {
+	.owner	= THIS_MODULE,
+	.open	= boardinfo_decrypt_test_open,
+	.read	= seq_read,
+};
+
+static int boardinfo_decrypt_test_proc_create(void)
+{
+	/* Create read only proc entry */
+	boardinfo->proc_test_file = proc_create("vaaman-boardinfo-decrypt-test",
+			BOARDINFO_PROC_MODE,
+			NULL,
+			&boardinfo_decrypt_test_ops);
+
+	/* Check if proc entry is created */
+	if (!boardinfo->proc_test_file) {
 		pr_err("%s: Failed to create proc entry\n", __func__);
 		return -ENOMEM;
 	}
@@ -184,12 +344,20 @@ static int boardinfo_probe(struct platform_device *pdev)
 		return ret;
 	}
 
+	/* create proc entry for decrypt test */
+	ret = boardinfo_decrypt_test_proc_create();
+	if (ret < 0) {
+		pr_err("%s: Failed to create proc entry\n", __func__);
+		return ret;
+	}
+
 	return 0;
 }
 
 static int boardinfo_remove(struct platform_device *pdev)
 {
 	proc_remove(boardinfo->proc_file);
+	proc_remove(boardinfo->proc_test_file);
 	vfree(boardinfo);
 
 	return 0;
