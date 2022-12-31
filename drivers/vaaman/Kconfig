@@ -1,0 +1,12 @@
+config VAAMAN_BOARDINFO
+	bool "Enable VAAMAN boardinfo"
+	default y
+	select VAAMAN_BOARDINFO_DECRYPT_TEST
+	help
+	  This option enables the VAAMAN board information.
+
+config VAAMAN_BOARDINFO_DECRYPT_TEST
+	bool "Enable VAAMAN boardinfo decryption test"
+	help
+	  This option enables the VAAMAN board information decryption test.
+

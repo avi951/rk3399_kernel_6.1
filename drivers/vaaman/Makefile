@@ -1,1 +1,1 @@
-obj-y := vaaman_boardinfo.o
+obj-$(CONFIG_VAAMAN_BOARDINFO) := vaaman_boardinfo.o
