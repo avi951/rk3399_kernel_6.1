@@ -14,7 +14,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 static void boardinfo_print_secret(char *type, char *secret)
 {
@@ -42,6 +42,12 @@ static int boardinfo_show(struct seq_file *m, void *v)
 		boardinfo_print_secret("Secret", secret);
 #endif
 
+		/* Print vaaman key */
+		pr_info("Vaaman key: ");
+		for (i = 0; i < SECRET_SIZE; i++)
+			pr_info("%x ", vaaman_key[i]);
+		pr_info("\n");
+
 		/* Allocate a cipher handle */
 		boardinfo->tfm = crypto_alloc_cipher("aes",
 				CRYPTO_ALG_TYPE_BLKCIPHER, CRYPTO_ALG_ASYNC);
@@ -52,7 +58,8 @@ static int boardinfo_show(struct seq_file *m, void *v)
 		}
 
 		/* Set the key for the cipher */
-		ret = crypto_cipher_setkey(boardinfo->tfm, secret, SECRET_SIZE);
+		ret = crypto_cipher_setkey(boardinfo->tfm,
+					   vaaman_key, SECRET_SIZE);
 		if (ret) {
 			pr_err("Invalid key for aes\n");
 			ret = -EINVAL;
@@ -154,7 +161,7 @@ static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
 
 #ifdef DEBUG
 	/* Print secret */
-	boardinfo_print_secret("Enc Secret", secret);
+	boardinfo_print_secret("Encrypted Secret", secret);
 #endif
 
 	/* Allocate a cipher handle */
@@ -167,7 +174,7 @@ static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
 	}
 
 	/* Set the key for the cipher */
-	ret = crypto_cipher_setkey(boardinfo->tfm, secret, SECRET_SIZE);
+	ret = crypto_cipher_setkey(boardinfo->tfm, vaaman_key, SECRET_SIZE);
 	if (ret) {
 		pr_err("Invalid key for aes\n");
 		ret = -EINVAL;
