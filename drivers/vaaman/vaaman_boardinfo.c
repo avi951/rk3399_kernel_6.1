@@ -73,7 +73,7 @@ static int boardinfo_show(struct seq_file *m, void *v)
 			ret = -EINVAL;
 			goto free_cipher_handle;
 		}
-		pr_debug("block size: %d\n", block_size);
+		pr_info("%s: block size: %d\n", __func__, block_size);
 
 		/*
 		 * Create padding for the secret string
@@ -95,6 +95,9 @@ static int boardinfo_show(struct seq_file *m, void *v)
 			blocks++;
 		}
 
+		/* print length of buf */
+		pr_info("%s: buf length: %d\n", __func__, (int)strlen(buf));
+
 #ifdef DEBUG
 		/* Print encrypted secret */
 		boardinfo_print_secret("Encrypted Secret", buf);
@@ -104,7 +107,7 @@ static int boardinfo_show(struct seq_file *m, void *v)
 		kfree(padding);
 
 		/* Print the encrypted secret to the proc file */
-		seq_printf(m, "%s\n", buf);
+		seq_printf(m, "%s", buf);
 	} else {
 		pr_err("%s: boardid: %x %x is incorrect\n",
 		       __func__,
@@ -188,10 +191,11 @@ static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
 		ret = -EINVAL;
 		goto free_cipher_handle;
 	}
-	pr_debug("block size: %d, len: %d\n", block_size, block_size * blocks);
+	pr_info("%s: blocks: %d, block size: %d, len: %d\n",
+		__func__, blocks, block_size, block_size * blocks);
 
 	/* Create dest for the secret string */
-	dest = kmalloc(block_size * blocks, GFP_KERNEL);
+	dest = kmalloc((block_size * blocks), GFP_KERNEL);
 	if (!dest) {
 		ret = -ENOMEM;
 		goto free_cipher_handle;
@@ -203,11 +207,14 @@ static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
 					  &dest[i], &buf[i]);
 	}
 
+	/* Print length of dest */
+	pr_info("%s: dest length: %d\n", __func__, (int)strlen(dest));
+
 #ifdef DEBUG
 	boardinfo_print_secret("Decrypted Secret", dest);
 #endif
 
-	seq_printf(m, "%s\n", dest);
+	seq_printf(m, "%s", dest);
 
 	/* Free the dest memory */
 	kfree(dest);
