@@ -21,6 +21,7 @@ char vaaman_key[SECRET_SIZE] = {
 
 struct boardinfo_data {
 	char buf[SECRET_SIZE];
+	char dec_buf[SECRET_SIZE];
 	int blocks;
 	int board_id[BOARDINFO_ID_MAX_LEN];
 	int hw_id[BOARDINFO_HWID_MAX_LEN];
