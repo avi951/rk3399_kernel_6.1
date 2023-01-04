@@ -16,8 +16,8 @@
 
 static int boardinfo_alloc_tfm_cipher(void)
 {
-	boardinfo->tfm = crypto_alloc_cipher("aes",
-				  CRYPTO_ALG_TYPE_BLKCIPHER, CRYPTO_ALG_ASYNC);
+	boardinfo->tfm = crypto_alloc_cipher("aes", CRYPTO_ALG_TYPE_BLKCIPHER,
+					     CRYPTO_ALG_ASYNC);
 	if (IS_ERR(boardinfo->tfm)) {
 		pr_err("Failed to load transform for aes\n");
 		return PTR_ERR(boardinfo->tfm);
@@ -30,8 +30,7 @@ static int boardinfo_setkey_cipher(void)
 {
 	int ret = 0;
 
-	ret = crypto_cipher_setkey(boardinfo->tfm,
-							   vaaman_key, SECRET_SIZE);
+	ret = crypto_cipher_setkey(boardinfo->tfm, vaaman_key, SECRET_SIZE);
 	if (ret) {
 		pr_err("Invalid key for aes\n");
 		return -EINVAL;
@@ -58,10 +57,10 @@ static void boardinfo_print_secret(char *type, char *secret)
 {
 	int i;
 
-	printk("%s: ", type);
+	printk(KERN_INFO "%s: ", type);
 	for (i = 0; i < strlen(secret); i++)
-		printk("%x ", secret[i]);
-	printk("\n");
+		printk(KERN_INFO "%x ", secret[i]);
+	printk(KERN_INFO "\n");
 }
 #endif
 
@@ -103,10 +102,13 @@ static int boardinfo_encrypt_buffer(void)
 	/* Encrypt the secret string with AES */
 	for (i = 0; i < SECRET_SIZE; i += block_size) {
 		memset(padding, 0, block_size + 1);
-		strlcpy(padding, &secret[i], block_size + 1);
+		if (strscpy(padding, &secret[i], block_size + 1) < 0) {
+			ret = -EINVAL;
+			goto free_padding;
+		}
 		/* Encrypt the block (dst: *secret, src: *padding) */
-		crypto_cipher_encrypt_one(boardinfo->tfm,
-					  &boardinfo->buf[i], padding);
+		crypto_cipher_encrypt_one(boardinfo->tfm, &boardinfo->buf[i],
+					  padding);
 		boardinfo->blocks++;
 	}
 
@@ -115,6 +117,7 @@ static int boardinfo_encrypt_buffer(void)
 	boardinfo_print_secret("Encrypted buffer", boardinfo->buf);
 #endif
 
+free_padding:
 	/* Free the padding memory */
 	kfree(padding);
 
@@ -128,19 +131,15 @@ out:
 static int boardinfo_show(struct seq_file *m, void *v)
 {
 	/* Check if the board id is valid */
-	if (boardinfo->board_id[0] == 0x3 &&
-	    boardinfo->board_id[1] == 0xc) {
-
+	if (boardinfo->board_id[0] == 0x3 && boardinfo->board_id[1] == 0xc) {
 		/* Encrypt the buf */
 		if (boardinfo_encrypt_buffer())
 			return -EINVAL;
 
 		seq_printf(m, "%s", boardinfo->buf);
 	} else {
-		pr_err("%s: boardid: %x %x is incorrect\n",
-		       __func__,
-				boardinfo->board_id[0],
-				boardinfo->board_id[1]);
+		pr_err("%s: boardid: %x %x is incorrect\n", __func__,
+		       boardinfo->board_id[0], boardinfo->board_id[1]);
 
 		seq_printf(m, "%s", "");
 	}
@@ -154,18 +153,16 @@ static int boardinfo_open(struct inode *inode, struct file *file)
 }
 
 static const struct file_operations boardinfo_ops = {
-	.owner	= THIS_MODULE,
-	.open	= boardinfo_open,
-	.read	= seq_read,
+	.owner = THIS_MODULE,
+	.open = boardinfo_open,
+	.read = seq_read,
 };
 
 static int boardinfo_proc_create(void)
 {
 	/* Create read only proc entry */
-	boardinfo->proc_file = proc_create(BOARDINFO_NAME,
-			BOARDINFO_PROC_MODE,
-			NULL,
-			&boardinfo_ops);
+	boardinfo->proc_file = proc_create(BOARDINFO_NAME, BOARDINFO_PROC_MODE,
+					   NULL, &boardinfo_ops);
 
 	/* Check if proc entry is created */
 	if (!boardinfo->proc_file) {
@@ -205,7 +202,8 @@ static int boardinfo_decrypt_buffer(void)
 	/* Decrypt secret */
 	for (i = 0; i < SECRET_SIZE; i += block_size)
 		crypto_cipher_decrypt_one(boardinfo->tfm,
-					  &boardinfo->dec_buf[i], &boardinfo->buf[i]);
+					  &boardinfo->dec_buf[i],
+					  &boardinfo->buf[i]);
 
 #ifdef CONFIG_VAAMAN_BOARDINFO_DEBUG
 	boardinfo_print_secret("Decrypted buffer", boardinfo->dec_buf);
@@ -220,19 +218,15 @@ out:
 static int boardinfo_decrypt_show(struct seq_file *m, void *v)
 {
 	/* Check if the board id is valid */
-	if (boardinfo->board_id[0] == 0x3 &&
-	    boardinfo->board_id[1] == 0xc) {
-	
+	if (boardinfo->board_id[0] == 0x3 && boardinfo->board_id[1] == 0xc) {
 		/* Decrypt the buf */
 		if (boardinfo_decrypt_buffer())
 			return -EINVAL;
 
 		seq_printf(m, "%s", boardinfo->dec_buf);
 	} else {
-		pr_err("%s: boardid: %x %x is incorrect\n",
-		       __func__,
-				boardinfo->board_id[0],
-				boardinfo->board_id[1]);
+		pr_err("%s: boardid: %x %x is incorrect\n", __func__,
+		       boardinfo->board_id[0], boardinfo->board_id[1]);
 
 		seq_printf(m, "%s", "");
 	}
@@ -246,18 +240,17 @@ static int boardinfo_decrypt_open(struct inode *inode, struct file *file)
 }
 
 static const struct file_operations boardinfo_decrypt_ops = {
-	.owner	= THIS_MODULE,
-	.open	= boardinfo_decrypt_open,
-	.read	= seq_read,
+	.owner = THIS_MODULE,
+	.open = boardinfo_decrypt_open,
+	.read = seq_read,
 };
 
 static int boardinfo_decrypt_proc_create(void)
 {
 	/* Create read only proc entry */
 	boardinfo->proc_file = proc_create("vaaman-boardinfo-decrypt-test",
-			BOARDINFO_PROC_MODE,
-			NULL,
-			&boardinfo_decrypt_ops);
+					   BOARDINFO_PROC_MODE, NULL,
+					   &boardinfo_decrypt_ops);
 
 	/* Check if proc entry is created */
 	if (!boardinfo->proc_file) {
@@ -269,26 +262,26 @@ static int boardinfo_decrypt_proc_create(void)
 }
 #endif
 
-static int boardinfo_get_gpio_value(struct device *dev,
-				    char *gpio_name, int flag)
+static int boardinfo_get_gpio_value(struct device *dev, char *gpio_name,
+				    int flag)
 {
 	int ret = -1, hwid = -1;
 
 	/* Get the gpio number from the device tree */
 	hwid = of_get_named_gpio(dev->of_node, gpio_name, 0);
 	if (!gpio_is_valid(hwid)) {
-		pr_err("%s: %s pin not available in board!\n",
-		       __func__, gpio_name);
+		pr_err("%s: %s pin not available in board!\n", __func__,
+		       gpio_name);
 		return -ENODEV;
 	}
 
 	/* Set gpio direction as input */
 	if (flag) {
-		ret = devm_gpio_request_one(dev,
-					    hwid, GPIOF_DIR_OUT, gpio_name);
+		ret = devm_gpio_request_one(dev, hwid, GPIOF_DIR_OUT,
+					    gpio_name);
 		if (ret < 0) {
-			pr_err("%s: Failed to set %s pin\n",
-			       __func__, gpio_name);
+			pr_err("%s: Failed to set %s pin\n", __func__,
+			       gpio_name);
 			return ret;
 		}
 	}
@@ -307,25 +300,23 @@ static int boardinfo_create_board_id(void)
 	/* Check if the board hw id is set correctly */
 	if (boardinfo->hw_id[0] < 0 || boardinfo->hw_id[1] < 0 ||
 	    boardinfo->hw_id[2] < 0 || boardinfo->hw_id[3] < 0) {
-		pr_err("%s: boardid: %x %x %x %x is incorrect\n",
-		       __func__, boardinfo->hw_id[0], boardinfo->hw_id[1],
-				boardinfo->hw_id[2], boardinfo->hw_id[3]);
+		pr_err("%s: boardid: %x %x %x %x is incorrect\n", __func__,
+		       boardinfo->hw_id[0], boardinfo->hw_id[1],
+		       boardinfo->hw_id[2], boardinfo->hw_id[3]);
 		return -EINVAL;
 	}
 
 	/* Convert the id bits to a hw id */
-	boardinfo->board_id[0] = (boardinfo->hw_id[0] << 3) |
-		(boardinfo->hw_id[1] << 2) |
-		(boardinfo->hw_id[2] << 1) |
-		(boardinfo->hw_id[3] << 0);
+	boardinfo->board_id[0] =
+		(boardinfo->hw_id[0] << 3) | (boardinfo->hw_id[1] << 2) |
+		(boardinfo->hw_id[2] << 1) | (boardinfo->hw_id[3] << 0);
 
-	boardinfo->board_id[1] = (boardinfo->hw_id[3] << 3) |
-		(boardinfo->hw_id[2] << 2) |
-		(boardinfo->hw_id[1] << 1) |
-		(boardinfo->hw_id[0] << 0);
+	boardinfo->board_id[1] =
+		(boardinfo->hw_id[3] << 3) | (boardinfo->hw_id[2] << 2) |
+		(boardinfo->hw_id[1] << 1) | (boardinfo->hw_id[0] << 0);
 
-	pr_debug("%s: board id: %x %x\n",
-		 __func__, boardinfo->board_id[0], boardinfo->board_id[1]);
+	pr_debug("%s: board id: %x %x\n", __func__, boardinfo->board_id[0],
+		 boardinfo->board_id[1]);
 
 	return 0;
 }
@@ -415,7 +406,9 @@ static int boardinfo_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id of_boardinfo_match[] = {
-	{ .compatible = BOARDINFO_NAME, },
+	{
+		.compatible = BOARDINFO_NAME,
+	},
 	{},
 };
 MODULE_DEVICE_TABLE(of, of_boardinfo_match);

@@ -1,16 +1,19 @@
 config VAAMAN_BOARDINFO
 	bool "Enable VAAMAN boardinfo"
 	default n
-	help
+	---help---
+	  Say Y here to enable VAAMAN boardinfo.
 	  This option enables the VAAMAN board information.
 
 config VAAMAN_BOARDINFO_DECRYPT
 	bool "Enable VAAMAN boardinfo decryption test"
-	help
+	---help---
+	  Say Y here to enable VAAMAN boardinfo decryption test.
 	  This option enables the VAAMAN board information decryption test.
 
 config VAAMAN_BOARDINFO_DEBUG
 	bool "Enable VAAMAN boardinfo debug"
-	help
+	---help---
+	  Say Y here to enable VAAMAN boardinfo debug.
 	  This option enables the VAAMAN board information debug.
 
