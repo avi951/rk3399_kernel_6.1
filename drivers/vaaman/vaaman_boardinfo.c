@@ -14,7 +14,43 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
-#define DEBUG 1
+static int boardinfo_alloc_tfm_cipher(struct crypto_cipher *tfm)
+{
+	tfm = crypto_alloc_cipher("aes",
+				  CRYPTO_ALG_TYPE_BLKCIPHER, CRYPTO_ALG_ASYNC);
+	if (IS_ERR(tfm)) {
+		pr_err("Failed to load transform for aes\n");
+		return PTR_ERR(tfm);
+	}
+
+	return 0;
+}
+
+static int boardinfo_setkey_cipher(struct crypto_cipher *tfm)
+{
+	int ret = 0;
+
+	ret = crypto_cipher_setkey(tfm, vaaman_key, SECRET_SIZE);
+	if (ret) {
+		pr_err("Invalid key for aes\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int boardinfo_get_block_size(struct crypto_cipher *tfm)
+{
+	int block_size = 0;
+
+	block_size = crypto_cipher_blocksize(tfm);
+	if (!block_size) {
+		pr_err("Invalid block size for aes\n");
+		return -EINVAL;
+	}
+
+	return block_size;
+}
 
 static void boardinfo_print_secret(char *type, char *secret)
 {
@@ -26,100 +62,88 @@ static void boardinfo_print_secret(char *type, char *secret)
 	pr_info("\n");
 }
 
-static int boardinfo_show(struct seq_file *m, void *v)
+static int boardinfo_encrypt_buffer(char *buf)
 {
 	unsigned int block_size;
 	char *padding = NULL;
 	int i, ret = 0;
 
+#ifdef CONFIG_VAAMAN_BOARDINFO_DEBUG
+	boardinfo_print_secret("Secret string", secret);
+#endif
+
+	/* Allocate a cipher handle */
+	ret = boardinfo_alloc_tfm_cipher(boardinfo->tfm);
+	if (ret)
+		goto out;
+
+	/* Set the key for the cipher */
+	ret = boardinfo_setkey_cipher(boardinfo->tfm);
+	if (ret)
+		goto free_cipher_handle;
+
+	/* Calculate block size */
+	block_size = boardinfo_get_block_size(boardinfo->tfm);
+	if (block_size < 0)
+		goto free_cipher_handle;
+
+	/*
+	 * Create padding for the secret string
+	 * to be a multiple of the block size
+	 */
+	padding = kmalloc(block_size + 1, GFP_KERNEL);
+	if (!padding) {
+		ret = -ENOMEM;
+		goto free_cipher_handle;
+	}
+
+	/* Encrypt the secret string with AES */
+	for (i = 0; i < SECRET_SIZE; i += block_size) {
+		memset(padding, 0, block_size + 1);
+		strlcpy(padding, &secret[i], block_size + 1);
+		/* Encrypt the block (dst: *secret, src: *padding) */
+		crypto_cipher_encrypt_one(boardinfo->tfm,
+					  &buf[i], padding);
+		boardinfo->blocks++;
+	}
+
+#ifdef CONFIG_VAAMAN_BOARDINFO_DEBUG
+	/* Print encrypted secret */
+	boardinfo_print_secret("Encrypted buffer", buf);
+#endif
+
+	/* Free the padding memory */
+	kfree(padding);
+
+free_cipher_handle:
+	/* Free the cipher handle */
+	crypto_free_cipher(boardinfo->tfm);
+out:
+	return ret;
+}
+
+static int boardinfo_show(struct seq_file *m, void *v)
+{
+	int ret = 0;
+
 	/* Check if the board id is valid */
-	if (boardinfo->board_id[0] == 0x3 && boardinfo->board_id[1] == 0xc) {
-		if (!strncmp(secret, SECRET_STRING, SECRET_SIZE))
-			pr_err("correct secret string\n");
-
-#ifdef DEBUG
-		/* Print secret string */
-		boardinfo_print_secret("Secret", secret);
-#endif
-
-		/* Print vaaman key */
-		pr_info("Vaaman key: ");
-		for (i = 0; i < SECRET_SIZE; i++)
-			pr_info("%x ", vaaman_key[i]);
-		pr_info("\n");
-
-		/* Allocate a cipher handle */
-		boardinfo->tfm = crypto_alloc_cipher("aes",
-				CRYPTO_ALG_TYPE_BLKCIPHER, CRYPTO_ALG_ASYNC);
-		if (IS_ERR(boardinfo->tfm)) {
-			pr_err("Failed to load transform for aes\n");
-			ret = PTR_ERR(boardinfo->tfm);
+	if (boardinfo->board_id[0] == 0x3 &&
+	    boardinfo->board_id[1] == 0xc) {
+		/* Encrypt the buf */
+		ret = boardinfo_encrypt_buffer(boardinfo->buf);
+		if (ret)
 			goto out;
-		}
 
-		/* Set the key for the cipher */
-		ret = crypto_cipher_setkey(boardinfo->tfm,
-					   vaaman_key, SECRET_SIZE);
-		if (ret) {
-			pr_err("Invalid key for aes\n");
-			ret = -EINVAL;
-			goto free_cipher_handle;
-		}
-
-		/* Calculate block size */
-		block_size = crypto_cipher_blocksize(boardinfo->tfm);
-		if (!block_size) {
-			pr_err("Invalid block size for aes\n");
-			ret = -EINVAL;
-			goto free_cipher_handle;
-		}
-		pr_info("%s: block size: %d\n", __func__, block_size);
-
-		/*
-		 * Create padding for the secret string
-		 * to be a multiple of the block size
-		 */
-		padding = kmalloc(block_size + 1, GFP_KERNEL);
-		if (!padding) {
-			ret = -ENOMEM;
-			goto free_cipher_handle;
-		}
-
-		/* Encrypt the secret string with AES */
-		for (i = 0; i < SECRET_SIZE; i += block_size) {
-			memset(padding, 0, block_size + 1);
-			strlcpy(padding, &secret[i], block_size + 1);
-			/* Encrypt the block (dst: *secret, src: *padding) */
-			crypto_cipher_encrypt_one(boardinfo->tfm,
-						  &buf[i], padding);
-			blocks++;
-		}
-
-		/* print length of buf */
-		pr_info("%s: buf length: %d\n", __func__, (int)strlen(buf));
-
-#ifdef DEBUG
-		/* Print encrypted secret */
-		boardinfo_print_secret("Encrypted Secret", buf);
-#endif
-
-		/* Free the padding memory */
-		kfree(padding);
-
-		/* Print the encrypted secret to the proc file */
-		seq_printf(m, "%s", buf);
+		seq_printf(m, "%s", boardinfo->buf);
 	} else {
 		pr_err("%s: boardid: %x %x is incorrect\n",
 		       __func__,
 				boardinfo->board_id[0],
 				boardinfo->board_id[1]);
 
-		ret = -EINVAL;
-		goto out;
+		seq_printf(m, "%s", "");
 	}
 
-free_cipher_handle:
-	crypto_free_cipher(boardinfo->tfm);
 out:
 	return ret;
 }
@@ -152,72 +176,48 @@ static int boardinfo_proc_create(void)
 	return 0;
 }
 
-#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT_TEST
-static int boardinfo_decrypt_test_show(struct seq_file *m, void *v)
+#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT
+static int boardinfo_decrypt_buffer(char *dest)
 {
 	unsigned int block_size;
-	char *dest = NULL;
-	int i, ret = 0;
+	int dest_size, i, ret = 0;
 
-	if (!strncmp(secret, SECRET_STRING, SECRET_SIZE))
-		pr_err("correct secret string\n");
-
-#ifdef DEBUG
+#ifdef CONFIG_VAAMAN_BOARDINFO_DEBUG
 	/* Print secret */
-	boardinfo_print_secret("Encrypted Secret", secret);
+	boardinfo_print_secret("Encrypted buffer", boardinfo->buf);
 #endif
 
 	/* Allocate a cipher handle */
-	boardinfo->tfm = crypto_alloc_cipher("aes",
-			CRYPTO_ALG_TYPE_BLKCIPHER, CRYPTO_ALG_ASYNC);
-	if (IS_ERR(boardinfo->tfm)) {
-		pr_err("Failed to load transform for aes\n");
-		ret = PTR_ERR(boardinfo->tfm);
+	ret = boardinfo_alloc_tfm_cipher(boardinfo->tfm);
+	if (ret)
 		goto out;
-	}
 
 	/* Set the key for the cipher */
-	ret = crypto_cipher_setkey(boardinfo->tfm, vaaman_key, SECRET_SIZE);
-	if (ret) {
-		pr_err("Invalid key for aes\n");
-		ret = -EINVAL;
+	ret = boardinfo_setkey_cipher(boardinfo->tfm);
+	if (ret)
 		goto free_cipher_handle;
-	}
 
 	/* Calculate block size for AES */
-	block_size = crypto_cipher_blocksize(boardinfo->tfm);
-	if (!block_size) {
-		pr_err("Invalid block size for aes\n");
-		ret = -EINVAL;
+	block_size = boardinfo_get_block_size(boardinfo->tfm);
+	if (block_size < 0)
 		goto free_cipher_handle;
-	}
-	pr_info("%s: blocks: %d, block size: %d, len: %d\n",
-		__func__, blocks, block_size, block_size * blocks);
 
-	/* Create dest for the secret string */
-	dest = kmalloc((block_size * blocks), GFP_KERNEL);
+	dest_size = block_size * boardinfo->blocks;
+
+	dest = kmalloc(dest_size, GFP_KERNEL);
 	if (!dest) {
 		ret = -ENOMEM;
 		goto free_cipher_handle;
 	}
 
-	/* decrypt secret */
-	for (i = 0; i < (blocks * block_size); i += block_size) {
+	/* Decrypt secret */
+	for (i = 0; i < dest_size; i += block_size)
 		crypto_cipher_decrypt_one(boardinfo->tfm,
-					  &dest[i], &buf[i]);
-	}
+					  &dest[i], &boardinfo->buf[i]);
 
-	/* Print length of dest */
-	pr_info("%s: dest length: %d\n", __func__, (int)strlen(dest));
-
-#ifdef DEBUG
-	boardinfo_print_secret("Decrypted Secret", dest);
+#ifdef CONFIG_VAAMAN_BOARDINFO_DEBUG
+	boardinfo_print_secret("Decrypted buffer", dest);
 #endif
-
-	seq_printf(m, "%s", dest);
-
-	/* Free the dest memory */
-	kfree(dest);
 
 free_cipher_handle:
 	crypto_free_cipher(boardinfo->tfm);
@@ -225,27 +225,55 @@ out:
 	return ret;
 }
 
-static int boardinfo_decrypt_test_open(struct inode *inode, struct file *file)
+static int boardinfo_decrypt_show(struct seq_file *m, void *v)
 {
-	return single_open(file, boardinfo_decrypt_test_show, NULL);
+	char *dest = NULL;
+
+	/* Check if the board id is valid */
+	if (boardinfo->board_id[0] == 0x3 &&
+	    boardinfo->board_id[1] == 0xc) {
+		if (boardinfo_decrypt_buffer(dest) < 0) {
+			pr_err("%s: Failed to decrypt buffer\n", __func__);
+			return -EINVAL;
+		}
+
+		seq_printf(m, "%s", dest);
+
+		/* Free the dest memory */
+		kfree(dest);
+	} else {
+		pr_err("%s: boardid: %x %x is incorrect\n",
+		       __func__,
+				boardinfo->board_id[0],
+				boardinfo->board_id[1]);
+
+		seq_printf(m, "%s", "");
+	}
+
+	return 0;
 }
 
-static const struct file_operations boardinfo_decrypt_test_ops = {
+static int boardinfo_decrypt_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, boardinfo_decrypt_show, NULL);
+}
+
+static const struct file_operations boardinfo_decrypt_ops = {
 	.owner	= THIS_MODULE,
-	.open	= boardinfo_decrypt_test_open,
+	.open	= boardinfo_decrypt_open,
 	.read	= seq_read,
 };
 
-static int boardinfo_decrypt_test_proc_create(void)
+static int boardinfo_decrypt_proc_create(void)
 {
 	/* Create read only proc entry */
-	boardinfo->proc_test_file = proc_create("vaaman-boardinfo-decrypt-test",
+	boardinfo->proc_file = proc_create("vaaman-boardinfo-decrypt-test",
 			BOARDINFO_PROC_MODE,
 			NULL,
-			&boardinfo_decrypt_test_ops);
+			&boardinfo_decrypt_ops);
 
 	/* Check if proc entry is created */
-	if (!boardinfo->proc_test_file) {
+	if (!boardinfo->proc_file) {
 		pr_err("%s: Failed to create proc entry\n", __func__);
 		return -ENOMEM;
 	}
@@ -284,8 +312,6 @@ static int boardinfo_get_gpio_value(struct device *dev,
 	/* Free the gpio pin */
 	gpio_free(hwid);
 
-	pr_info("%s: id: %d\n", __func__, ret);
-
 	return ret;
 }
 
@@ -323,8 +349,10 @@ static int boardinfo_probe(struct platform_device *pdev)
 
 	/* Allocate memory for boardinfo */
 	boardinfo = devm_kzalloc(&pdev->dev, sizeof(*boardinfo), GFP_KERNEL);
-	if (!boardinfo)
-		return -ENOMEM;
+	if (!boardinfo) {
+		ret = -ENOMEM;
+		goto out;
+	}
 
 	/* Set the device */
 	boardinfo->dev = &pdev->dev;
@@ -332,7 +360,7 @@ static int boardinfo_probe(struct platform_device *pdev)
 	/* Initialize the board hw id to indicate that the id is not set */
 	memset(boardinfo->hw_id, -1, sizeof(boardinfo->hw_id));
 
-	/* get board hw_id from gpio */
+	/* Get board hw_id from gpio pins */
 	boardinfo->hw_id[0] =
 		boardinfo_get_gpio_value(boardinfo->dev, "hw_id0", 1);
 	boardinfo->hw_id[1] =
@@ -342,37 +370,38 @@ static int boardinfo_probe(struct platform_device *pdev)
 	boardinfo->hw_id[3] =
 		boardinfo_get_gpio_value(boardinfo->dev, "hw_id3", 0);
 
-	/* create board id */
+	/* Create board id from the hw id */
 	ret = boardinfo_create_board_id();
 	if (ret < 0) {
 		pr_err("%s: Failed to create board id\n", __func__);
-		return ret;
+		goto out;
 	}
 
-	/* create proc entry */
+	/* Create proc entry for board id */
 	ret = boardinfo_proc_create();
 	if (ret < 0) {
 		pr_err("%s: Failed to create proc entry\n", __func__);
-		return ret;
+		goto out;
 	}
 
-#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT_TEST
-	/* create proc entry for decrypt test */
-	ret = boardinfo_decrypt_test_proc_create();
+#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT
+	/* Create proc entry for decrypt test */
+	ret = boardinfo_decrypt_proc_create();
 	if (ret < 0) {
 		pr_err("%s: Failed to create proc entry\n", __func__);
-		return ret;
+		goto out;
 	}
 #endif
 
-	return 0;
+out:
+	return ret;
 }
 
 static int boardinfo_remove(struct platform_device *pdev)
 {
 	proc_remove(boardinfo->proc_file);
-#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT_TEST
-	proc_remove(boardinfo->proc_test_file);
+#ifdef CONFIG_VAAMAN_BOARDINFO_DECRYPT
+	proc_remove(boardinfo->proc_file);
 #endif
 	vfree(boardinfo);
 
