@@ -47,6 +47,7 @@
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
 #include "rk3399-vop-clk-set.dtsi"
+#include "vaaman-boardinfo.dtsi"
 
 / {
 	model = "ROCK PI 4B";
@@ -262,22 +263,6 @@
 		sdio_vref = <1800>;
 		WIFI,host_wake_irq = <&gpio0 3 GPIO_ACTIVE_HIGH>;
 		status = "okay";
-	};
-
-	vaaman_boardinfo: vaaman-boardinfo {
-		compatible = "vaaman-boardinfo";
-
-		// wlan host wake gpio (gpio value: 0)
-		hw_id0 = <&gpio0 3 GPIO_ACTIVE_HIGH>;
-
-		// gpio eDP : (gpio value 0)
-		hw_id1 = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
-
-		// vcc pcie : (gpio value 1)
-		hw_id2 = <&gpio2 26 GPIO_ACTIVE_HIGH>;
-
-		// vcc otg : (gpio value 1)
-		hw_id3 = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 	};
 
 	wireless-bluetooth {

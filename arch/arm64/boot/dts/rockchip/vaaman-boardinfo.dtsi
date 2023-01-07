@@ -1,0 +1,21 @@
+/* Copyright (C) Vicharak 2023 */
+
+/ {
+	compatible = "rockchip,rockpi","rockchip,rk3399";
+
+	vaaman_boardinfo: vaaman-boardinfo {
+		compatible = "vaaman-boardinfo";
+
+		// wlan host wake gpio (gpio value: 0)
+		hw_id0 = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+
+		// gpio eDP : (gpio value 0)
+		hw_id1 = <&gpio3 RK_PD6 GPIO_ACTIVE_HIGH>;
+
+		// vcc pcie : (gpio value 1)
+		hw_id2 = <&gpio2 26 GPIO_ACTIVE_HIGH>;
+
+		// vcc otg : (gpio value 1)
+		hw_id3 = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+	};
+};
