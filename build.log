@@ -1,0 +1,7 @@
+make[1]: Entering directory '/home/dj/linux/out'
+  GEN     Makefile
+  DTC     arch/arm64/boot/dts/rockchip/rk3399-vaaman-01.dtb
+  CALL    ../scripts/checksyscalls.sh
+  OBJCOPY arch/arm64/boot/Image
+  GZIP    arch/arm64/boot/Image.gz
+make[1]: Leaving directory '/home/dj/linux/out'

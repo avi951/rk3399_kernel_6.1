@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2022 VICHARAK IN
+ */
+
+/dts-v1/;
+#include "rk3399-vaaman-01.dtsi"
+
+/ {
+	model = "VICHARAK VAAMAN V0.1";
+	compatible = "vicharak,vaaman", "vicharak,vaaman-01", "rockchip,rk3399";
+
+	aliases {
+		mmc2 = &sdio0;
+	};
+};
+
+&board_leds {
+	status = "okay";
+
+	board-led1 {
+		status = "okay";
+	};
+
+	board-led2 {
+		status = "okay";
+	};
+};
+
+
+&i2c6 {
+	status = "okay";
+};
+
+
+&isp0 {
+	status = "okay";
+};
+
+&isp0_mmu {
+	status = "okay";
+};
+
+&mipi_dphy_rx0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+
+	w25q128:w25q128-flash@0 {
+		status = "okay";
+		compatible = "winbond,w25q128", "jedec,spi-nor";
+		reg =<0>;
+		spi-max-frequency = <10000000>;
+	};
+
+/*	w25q64:w25q64-flash@1 {
+		status = "okay";
+		//cs-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
+		compatible = "winbond,w25q64dw" , "jedec,spi-nor";
+		reg =<1>;
+		spi-max-frequency = <10000000>;
+	};*/
+};
+
+&sdio0 {
+	status = "okay";
+
+	rtl8822cs_wifi: wifi@1 {
+		reg		= <1>;
+		interrupt-parent = <&gpio0>;
+		interrupts	= <RK_PA3 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names	= "host-wake";
+		pinctrl-names	= "default";
+		pinctrl-0	= <&wifi_host_wake_l>;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
