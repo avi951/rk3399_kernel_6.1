@@ -21,6 +21,7 @@ obj-$(CONFIG_WLAN_VENDOR_SILABS) += silabs/
 obj-$(CONFIG_WLAN_VENDOR_ST) += st/
 obj-$(CONFIG_WLAN_VENDOR_TI) += ti/
 obj-$(CONFIG_WLAN_VENDOR_ZYDAS) += zydas/
+obj-$(CONFIG_WL_ROCKCHIP)	+= rockchip_wlan/
 obj-$(CONFIG_RTL8822CS)	+= rtl88x2cs/
 
 obj-$(CONFIG_WLAN) += virtual/
