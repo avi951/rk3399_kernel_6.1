@@ -84,7 +84,8 @@
         };
 
 	edp_panel: edp-panel {
-		compatible = "simple-bridge";
+		compatible = "edp-panel";
+		// compatible = "simple-bridge-lt";
 		// backlight = <&backlight>;
 		ddc-i2c-bus = <&i2c7>;
 		power-supply = <&vcc3v3_sys>;
@@ -95,7 +96,7 @@
 
 		port {
 			panel_in_edp: endpoint {
-					remote-endpoint = <&edp_out_panel>;
+				remote-endpoint = <&edp_out_panel>;
 			};
 		};
 	};
@@ -282,11 +283,11 @@
 	ddc-i2c-bus = <&i2c3>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmi_cec>;
-	status = "okay";
+	status = "disabled";
 };
 
 &hdmi_sound {
-	status = "okay";
+	status = "disabled";
 };
 
 &i2c0 {
@@ -873,28 +874,28 @@
 };
 
 &vopl_out_hdmi {
-	status = "okay";
+	status = "disabled";
 };
 
 &edp {
-	status = "disabled";
+	status = "okay";
 	// /delete-node/ pinctrl-0;
 	force-hpd;
 	ports {
-			edp_out: port@1 {
-					reg = <1>;
-					#address-cells = <1>;
-					#size-cells = <0>;
+		edp_out: port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
 
-					/*edp_out_bridge: endpoint@0 {
-							reg = <0>;
-							remote-endpoint = <&bridge_in_edp>;
-					};*/
+			/*edp_out_bridge: endpoint@0 {
+					reg = <0>;
+					remote-endpoint = <&bridge_in_edp>;
+			};*/
 
-					edp_out_panel: endpoint@0 {
-							reg = <0>;
-							remote-endpoint = <&panel_in_edp>;
-					};
+			edp_out_panel: endpoint {
+					// reg = <0>;
+					remote-endpoint = <&panel_in_edp>;
 			};
+		};
 	};
 };

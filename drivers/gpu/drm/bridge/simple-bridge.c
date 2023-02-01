@@ -270,7 +270,7 @@ static const struct of_device_id simple_bridge_match[] = {
 			.connector_type = DRM_MODE_CONNECTOR_VGA,
 		},
 	}, {
-		.compatible = "simple-bridge",
+		.compatible = "simple-bridge-lt",
 		.data = &(const struct simple_bridge_info) {
 			.connector_type = DRM_MODE_CONNECTOR_eDP,
 		},

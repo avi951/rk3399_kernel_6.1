@@ -384,9 +384,10 @@ static int rockchip_dp_probe(struct platform_device *pdev)
 	if (!dp_data)
 		return -ENODEV;
 
-	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, 0, &panel, NULL);
-	if (ret < 0)
-		return ret;
+	dev_info(dev, "Finding Bridge\n");
+	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, -1, &panel, NULL);
+	/*if (ret < 0)
+		return ret;*/
 
 	dp = devm_kzalloc(dev, sizeof(*dp), GFP_KERNEL);
 	if (!dp)
@@ -401,20 +402,24 @@ static int rockchip_dp_probe(struct platform_device *pdev)
 	dp->plat_data.power_off = rockchip_dp_powerdown;
 	dp->plat_data.get_modes = rockchip_dp_get_modes;
 
+	dev_info(dev, "Found Bridge\n");
 	ret = rockchip_dp_of_probe(dp);
 	if (ret < 0)
 		return ret;
 
 	platform_set_drvdata(pdev, dp);
 
+	dev_info(dev, "Rockchip DP of probe\n");
 	dp->adp = analogix_dp_probe(dev, &dp->plat_data);
 	if (IS_ERR(dp->adp))
 		return PTR_ERR(dp->adp);
 
+	dev_info(dev, "Rockchip DP probe\n");
 	ret = component_add(dev, &rockchip_dp_component_ops);
 	if (ret)
 		goto err_dp_remove;
 
+	dev_info(dev, "Rockchip DP probe function ended\n");
 	return 0;
 
 err_dp_remove:
