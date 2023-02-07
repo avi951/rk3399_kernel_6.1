@@ -118,6 +118,8 @@ int get_wifi_chip_type(void)
 	type = WIFI_AP6234;
     } else if (strcmp(wifi_chip_type_string, "ap6255") == 0) {
 	type = WIFI_AP6255;
+    } else if (strcmp(wifi_chip_type_string, "ap6256") == 0) {
+	type = WIFI_AP6256;
     } else if (strcmp(wifi_chip_type_string, "ap6330") == 0) {
         type = WIFI_AP6330;
     } else if (strcmp(wifi_chip_type_string, "ap6335") == 0) {
@@ -148,6 +150,8 @@ int get_wifi_chip_type(void)
         type = WIFI_RTL8723AU;        
     } else if (strcmp(wifi_chip_type_string, "rtl8723bu") == 0) {
         type = WIFI_RTL8723BU;
+    } else if (strcmp(wifi_chip_type_string, "rtl8822cs") == 0) {
+        type = WIFI_RTL8822CS;
     } else if (strcmp(wifi_chip_type_string, "rtl8189es") == 0) {
         type = WIFI_RTL8189ES;
     } else if (strcmp(wifi_chip_type_string, "rtl8189fs") == 0) {
@@ -160,7 +164,9 @@ int get_wifi_chip_type(void)
         type = WIFI_MVL88W8977;
     } else if (strcmp(wifi_chip_type_string, "ssv6051") == 0) {
         type = WIFI_SSV6051;
-    } else {
+    } else if (strcmp(wifi_chip_type_string, "rtl8822cs") == 0) {
+        type = WIFI_RTL8822CS;
+    }else {
         type = WIFI_AP6210;
     }
     return type;
