@@ -385,7 +385,7 @@ static int rockchip_dp_probe(struct platform_device *pdev)
 		return -ENODEV;
 
 	dev_info(dev, "Finding Bridge\n");
-	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, -1, &panel, NULL);
+	ret = drm_of_find_panel_or_bridge(dev->of_node, 1, 0, &panel, NULL);
 	/*if (ret < 0)
 		return ret;*/
 

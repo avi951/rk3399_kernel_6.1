@@ -283,11 +283,11 @@
 	ddc-i2c-bus = <&i2c3>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmi_cec>;
-	status = "disabled";
+	status = "okay";
 };
 
 &hdmi_sound {
-	status = "disabled";
+	status = "okay";
 };
 
 &i2c0 {
@@ -552,6 +552,25 @@
 
 &i2c7 {
 	status = "okay";
+
+	pca9570: gpio@24 {
+		status = "okay";
+		compatible = "nxp,pca9570";
+		reg = <0x24>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+};
+
+&spi1 {
+	status = "okay";
+
+	w25q128:w25q128-flash@0 {
+		status = "okay";
+		compatible = "winbond,w25q128", "jedec,spi-nor";
+		reg =<0>;
+		spi-max-frequency = <10000000>;
+	};
 };
 
 &i2s0 {
@@ -874,11 +893,11 @@
 };
 
 &vopl_out_hdmi {
-	status = "disabled";
+	status = "okay";
 };
 
 &edp {
-	status = "okay";
+	status = "disabled";
 	// /delete-node/ pinctrl-0;
 	force-hpd;
 	ports {
@@ -892,8 +911,8 @@
 					remote-endpoint = <&bridge_in_edp>;
 			};*/
 
-			edp_out_panel: endpoint {
-					// reg = <0>;
+			edp_out_panel: endpoint@0 {
+					reg = <0>;
 					remote-endpoint = <&panel_in_edp>;
 			};
 		};
