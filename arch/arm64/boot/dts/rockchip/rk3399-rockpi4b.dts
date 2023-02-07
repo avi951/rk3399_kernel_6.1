@@ -789,8 +789,15 @@
 	status = "okay";
 };
 
-&i2c7 {
+&spi1 {
 	status = "okay";
+
+	w25q128:w25q128-flash@0 {
+		status = "okay";
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+	};
 };
 
 &cpu_l0 {
@@ -896,10 +903,6 @@
 };
 
 &uart2 {
-	status = "okay";
-};
-
-&uart4 {
 	status = "okay";
 };
 

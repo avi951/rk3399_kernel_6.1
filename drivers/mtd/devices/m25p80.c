@@ -229,6 +229,8 @@ static int m25p_probe(struct spi_device *spi)
 
 	ppdata.of_node = spi->dev.of_node;
 
+	pr_err("[VAMMAN] probed mp25p80\n");
+
 	return mtd_device_parse_register(&nor->mtd, NULL, &ppdata,
 			data ? data->parts : NULL,
 			data ? data->nr_parts : 0);
@@ -313,7 +315,22 @@ static struct spi_driver m25p80_driver = {
 	 */
 };
 
-module_spi_driver(m25p80_driver);
+//module_spi_driver(m25p80_driver);
+
+static int __init spi_nor_init_drv(void)
+{
+	return spi_register_driver(&m25p80_driver);
+}
+/* register after i2c postcore initcall and before
+ * subsys initcalls that may rely on these GPIOs
+ */
+late_initcall(spi_nor_init_drv);
+
+static void __exit spi_nor_exit_drv(void)
+{
+	spi_unregister_driver(&m25p80_driver);
+}
+module_exit(spi_nor_exit_drv);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Mike Lavender");
