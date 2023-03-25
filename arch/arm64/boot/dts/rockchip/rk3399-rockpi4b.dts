@@ -357,23 +357,23 @@
 		default-brightness-level = <200>;
 	};*/
 
-	/*edp_panel: edp-panel {
+	edp_panel: edp-panel {
 		status = "okay";
 		compatible = "simple-panel";
-		backlight = <&backlight>;
-		power-supply = <&vcc3v3_sys>;
+		// backlight = <&backlight>;
+		// power-supply = <&vcc3v3_sys>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&edp_panel_en>;
-		enable-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
+		// pinctrl-0 = <&edp_panel_en>;
+		// enable-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
 		prepare-delay-ms = <20>;
 		enable-delay-ms = <20>;
 
-		ports {
-			panel_in_edp: endpoint {
-				remote-endpoint = <&edp_out_panel>;
+		/*ports {
+			panel_in_dp: endpoint {
+				remote-endpoint = <&dp_out_panel>;
 			};
-		};
-	};*/
+		};*/
+	};
 
 	lt7911: lt7911d {
 		compatible = "lt,lt7911";
@@ -415,7 +415,7 @@
 
 &edp {
 	status = "okay";
-	vcc = "vcc1v8_s0";
+	// vcc = "vcc1v8_s0";
 	force-hpd;
 	// /delete-node/ pinctrl-0;
 
@@ -435,6 +435,12 @@
 			};*/
 		};
 	};
+};
+
+&cdn_dp {
+	status = "disabled";
+	extcon = <&fusb0>;
+	phys = <&tcphy0_dp>;
 };
 
 &sdmmc {
@@ -468,7 +474,7 @@
 	num-slots = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
-	sd-uhs-sdr104;
+	// sd-uhs-sdr104;
 	status = "okay";
 };
 
@@ -876,6 +882,7 @@
 		status = "okay";
 		compatible = "jedec,spi-nor";
 		reg = <0>;
+		buffer-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
 		spi-max-frequency = <10000000>;
 	};
 };
@@ -1549,6 +1556,10 @@
 	route {
 		route_hdmi: route-hdmi {
 			status = "okay";
+		};
+
+		route_dp: route-dp {
+			status = "disabled";
 		};
 
 		route_edp: route-edp {
