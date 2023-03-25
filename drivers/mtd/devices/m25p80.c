@@ -19,6 +19,8 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/device.h>
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
@@ -168,6 +170,39 @@ static int m25p80_erase(struct spi_nor *nor, loff_t offset)
 	return 0;
 }
 
+static int set_gpio_value(struct device *dev, char *gpio_name,
+				    int flag, int value)
+{
+	int ret = -1, hwid = -1;
+
+	/* Get the gpio number from the device tree */
+	hwid = of_get_named_gpio(dev->of_node, gpio_name, 0);
+	if (!gpio_is_valid(hwid)) {
+		pr_err("%s: %s pin not available in board!\n", __func__,
+		       gpio_name);
+		return -ENODEV;
+	}
+
+	/* Set gpio direction*/
+	if (flag) {
+		ret = devm_gpio_request_one(dev, hwid, GPIOF_DIR_OUT,
+					    gpio_name);
+		if (ret < 0) {
+			pr_err("%s: Failed to set %s pin\n", __func__,
+			       gpio_name);
+			return ret;
+		}
+	}
+
+	/* Get gpio value from board */
+	gpio_set_value(hwid, value);
+
+	/* Free the gpio pin */
+	gpio_free(hwid);
+
+	return ret;
+}
+
 /*
  * board specific setup should have ensured the SPI clock used here
  * matches what the READ command supports, at least until this driver
@@ -188,6 +223,10 @@ static int m25p_probe(struct spi_device *spi)
 	flash = devm_kzalloc(&spi->dev, sizeof(*flash), GFP_KERNEL);
 	if (!flash)
 		return -ENOMEM;
+
+	ret = set_gpio_value(&spi->dev, "buffer-gpios", 1, 0);
+	if (!ret)
+		dev_info(&spi->dev, "cannot set buffer-gpios");
 
 	nor = &flash->spi_nor;
 
