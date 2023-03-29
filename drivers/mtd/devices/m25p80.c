@@ -19,8 +19,8 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/device.h>
-#include <linux/gpio.h>
-#include <linux/of_gpio.h>
+#include <linux/gpio/consumer.h>
+#include <linux/delay.h>
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
@@ -171,34 +171,25 @@ static int m25p80_erase(struct spi_nor *nor, loff_t offset)
 }
 
 static int set_gpio_value(struct device *dev, char *gpio_name,
-				    int flag, int value)
+				     int value)
 {
-	int ret = -1, hwid = -1;
-
-	/* Get the gpio number from the device tree */
-	hwid = of_get_named_gpio(dev->of_node, gpio_name, 0);
-	if (!gpio_is_valid(hwid)) {
-		pr_err("%s: %s pin not available in board!\n", __func__,
-		       gpio_name);
-		return -ENODEV;
-	}
+	int ret = 0;
+	struct gpio_desc *gpio;
 
 	/* Set gpio direction*/
-	if (flag) {
-		ret = devm_gpio_request_one(dev, hwid, GPIOF_DIR_OUT,
-					    gpio_name);
-		if (ret < 0) {
-			pr_err("%s: Failed to set %s pin\n", __func__,
-			       gpio_name);
-			return ret;
-		}
+	gpio = devm_gpiod_get(dev, gpio_name, GPIOD_OUT_HIGH);
+	if (IS_ERR(gpio)) {
+		ret = PTR_ERR(gpio);
+		dev_err(dev, "cannot get gpio_rst %d\n", ret);
+		return ret;
 	}
 
 	/* Get gpio value from board */
-	gpio_set_value(hwid, value);
+	gpiod_set_value(gpio, value);
+	msleep(20);
 
 	/* Free the gpio pin */
-	gpio_free(hwid);
+	gpiod_put(gpio);
 
 	return ret;
 }
@@ -224,8 +215,8 @@ static int m25p_probe(struct spi_device *spi)
 	if (!flash)
 		return -ENOMEM;
 
-	ret = set_gpio_value(&spi->dev, "buffer-gpios", 1, 0);
-	if (!ret)
+	ret = set_gpio_value(&spi->dev, "buffer", 0);
+	if (ret)
 		dev_info(&spi->dev, "cannot set buffer-gpios");
 
 	nor = &flash->spi_nor;
