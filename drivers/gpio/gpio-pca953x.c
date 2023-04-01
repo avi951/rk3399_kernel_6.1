@@ -18,6 +18,7 @@
 #include <linux/i2c.h>
 #include <linux/platform_data/pca953x.h>
 #include <linux/slab.h>
+#include <linux/delay.h>
 #ifdef CONFIG_OF_GPIO
 #include <linux/of_platform.h>
 #endif
@@ -666,6 +667,7 @@ static int pca953x_probe(struct i2c_client *client,
 {
 	struct pca953x_platform_data *pdata;
 	struct pca953x_chip *chip;
+	// struct gpio_desc *gpio_en;
 	int irq_base = 0;
 	int ret;
 	u32 invert = 0;
@@ -734,16 +736,16 @@ static int pca953x_probe(struct i2c_client *client,
 
 	i2c_set_clientdata(client, chip);
 
-	for (d = 0; d < 4; d++) {
-		if (d == 0)
-			pr_err("[pca]not setting value for P%d as it is power pin\n", d);
-		else {
-			pr_err("[pca]setting value to 0 for P%d\n", d);
-			pca953x_gpio_set_value(&chip->gpio_chip,d,0);
+	for (d = 0; d < chip->gpio_chip.ngpio; d++) {
+		if (d == 0) {
+			dev_info(&client->dev, "setting value 1 for P%d\n", d);
+			pca953x_gpio_set_value(&chip->gpio_chip,d,1);
+			continue;
 		}
+		dev_info(&client->dev, "setting value to 0 for P%d\n", d);
+		pca953x_gpio_set_value(&chip->gpio_chip,d,0);
 	}
 
-	pr_err("[pca]probed !!!!!!\n");
 	return 0;
 }
 
