@@ -818,9 +818,6 @@ static int rockchip_spi_remove(struct platform_device *pdev)
 
 	pm_runtime_disable(&pdev->dev);
 
-	clk_disable_unprepare(rs->spiclk);
-	clk_disable_unprepare(rs->apb_pclk);
-
 	if (rs->dma_tx.ch)
 		dma_release_channel(rs->dma_tx.ch);
 	if (rs->dma_rx.ch)
