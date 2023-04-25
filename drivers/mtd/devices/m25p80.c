@@ -19,6 +19,7 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/device.h>
+#include <linux/gpio.h>
 #include <linux/gpio/consumer.h>
 #include <linux/delay.h>
 
@@ -170,30 +171,6 @@ static int m25p80_erase(struct spi_nor *nor, loff_t offset)
 	return 0;
 }
 
-static int set_gpio_value(struct device *dev, char *gpio_name,
-				     int value)
-{
-	int ret = 0;
-	struct gpio_desc *gpio;
-
-	/* Set gpio direction*/
-	gpio = devm_gpiod_get(dev, gpio_name, GPIOD_OUT_HIGH);
-	if (IS_ERR(gpio)) {
-		ret = PTR_ERR(gpio);
-		dev_err(dev, "cannot get gpio_rst %d\n", ret);
-		return ret;
-	}
-
-	/* Get gpio value from board */
-	gpiod_set_value(gpio, value);
-	msleep(20);
-
-	/* Free the gpio pin */
-	gpiod_put(gpio);
-
-	return ret;
-}
-
 /*
  * board specific setup should have ensured the SPI clock used here
  * matches what the READ command supports, at least until this driver
@@ -214,10 +191,6 @@ static int m25p_probe(struct spi_device *spi)
 	flash = devm_kzalloc(&spi->dev, sizeof(*flash), GFP_KERNEL);
 	if (!flash)
 		return -ENOMEM;
-
-	ret = set_gpio_value(&spi->dev, "buffer", 0);
-	if (ret)
-		dev_info(&spi->dev, "cannot set buffer-gpios");
 
 	nor = &flash->spi_nor;
 
@@ -270,6 +243,17 @@ static int m25p_probe(struct spi_device *spi)
 static int m25p_remove(struct spi_device *spi)
 {
 	struct m25p	*flash = spi_get_drvdata(spi);
+	/*int ret;
+
+	ret = gpio_request_one(pin, GPIOF_IN, "spi1_cs0");
+	if (ret)
+		dev_err(&spi->dev, "Error getting spi1 cs0 gpio");
+
+
+	gpio_set_value(pin, -1);
+	dev_info(&spi->dev, "ret: %d\n", ret);
+
+	gpio_free(pin);*/
 
 	/* Clean up MTD stuff. */
 	return mtd_device_unregister(&flash->spi_nor.mtd);
