@@ -755,7 +755,7 @@
 
 	camera1: camera-module@10 {
 		status = "okay";
-		compatible = "sony,imx219";
+		compatible = "efinix,fpga-read";
 		reg = <0x10>;
 
 		clocks = <&cru SCLK_CIF_OUT>;
