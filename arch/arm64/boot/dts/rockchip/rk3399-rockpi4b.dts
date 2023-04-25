@@ -943,6 +943,7 @@
 &u2phy0 {
 	status = "okay";
 	enable-active-high;
+	wakeup-source;
 	/* otg-vbus-gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;*/
 	gpio = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 
@@ -964,6 +965,7 @@
 
 &u2phy1 {
 	status = "okay";
+	wakeup-source;
 
 	u2phy1_otg: otg-port {
 		status = "okay";
