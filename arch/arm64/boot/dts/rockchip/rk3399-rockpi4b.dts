@@ -321,6 +321,13 @@
 		status = "okay";
 	};
 
+	ext_cam_clk: external-camera-clock {
+		compatible = "fixed-clock";
+		clock-frequency = <25000000>;
+		clock-output-names = "CLK_CAMERA_25MHZ";
+		#clock-cells = <0>;
+	};
+
 	edp_panel: edp-panel {
 		status = "okay";
 		compatible = "simple-panel";
@@ -772,17 +779,9 @@
 	camera2: camera-module@36 {
 		status = "disabled";
 		compatible = "ovti,ov5647";
-		reg = <0x10>;
-
-		clocks = <&cru SCLK_CIF_OUT>;
-		clock-names = "clk_cif_out";
+		reg = <0x36>;
+		clocks = <&ext_cam_clk>;
 		pinctrl-names = "rockchip,camera_default";
-		pwdn-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
-
-		rockchip,camera-module-index = <0>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "default";
-		rockchip,camera-module-lens-name = "default";
 
 		port {
 			ucam_out0: endpoint {
@@ -1341,7 +1340,7 @@
 			rockchip,pins =
 				<1 12 RK_FUNC_1 &pcfg_pull_up>,
 				<1 11 RK_FUNC_1 &pcfg_pull_up>,
-				<1 13 RK_FUNC_GPIO &pcfg_pull_up>;	//camera module enable pin
+				<1 13 RK_FUNC_GPIO &pcfg_output_high>;	//camera module enable pin
 		};
 	};
 	fusb30x {
