@@ -94,6 +94,7 @@ obj-$(CONFIG_VIDEO_OV2659)	+= ov2659.o
 obj-$(CONFIG_VIDEO_TC35874X)	+= tc35874x.o
 obj-$(CONFIG_VIDEO_OV5647)	+= ov5647.o
 obj-$(CONFIG_VIDEO_IMX219)	+= imx219.o
+obj-$(CONFIG_FPGA_READ)	+= fpga-read.o
 obj-$(CONFIG_VIDEO_IMX258)	+= imx258.o
 obj-$(CONFIG_VIDEO_IMX317)	+= imx317.o
 obj-$(CONFIG_VIDEO_IMX323)	+= imx323.o
