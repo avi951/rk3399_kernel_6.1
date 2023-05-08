@@ -331,8 +331,6 @@
 	edp_panel: edp-panel {
 		status = "okay";
 		compatible = "simple-panel";
-		prepare-delay-ms = <20>;
-		enable-delay-ms = <20>;
 
 		ports {
 			panel_in_edp: endpoint {
