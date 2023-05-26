@@ -500,18 +500,18 @@ int del_mtd_device(struct mtd_info *mtd)
 	list_for_each_entry(not, &mtd_notifiers, list)
 		not->remove(mtd);
 
-	if (mtd->usecount) {
+	/* if (mtd->usecount) {
 		printk(KERN_NOTICE "Removing MTD device #%d (%s) with use count %d\n",
 		       mtd->index, mtd->name, mtd->usecount);
 		ret = -EBUSY;
-	} else {
+	} else { */
 		device_unregister(&mtd->dev);
 
 		idr_remove(&mtd_idr, mtd->index);
 
 		module_put(THIS_MODULE);
 		ret = 0;
-	}
+	// }
 
 out_error:
 	mutex_unlock(&mtd_table_mutex);
