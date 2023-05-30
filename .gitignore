@@ -126,3 +126,5 @@ out_modules/
 install-kernel
 # Ignore build logs
 build.log
+*.deb
+*.changes
