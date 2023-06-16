@@ -11,6 +11,11 @@ config FPGA
 	  kernel.  The FPGA framework adds a FPGA manager class and FPGA
 	  manager drivers.
 
+config VICHARAK_FPGA
+	tristate "Vicharak FPGA"
+	help
+	  FPGA manager driver support for Vicharak FPGAs.
+
 if FPGA
 
 config FPGA_MGR_SOCFPGA
@@ -27,3 +32,5 @@ config FPGA_MGR_ZYNQ_FPGA
 endif # FPGA
 
 endmenu
+
+source "drivers/fpga/vicharak/Kconfig"

@@ -2,6 +2,9 @@
 # Makefile for the fpga framework and fpga manager drivers.
 #
 
+# Vicharak FPGA
+obj-$(CONFIG_VICHARAK_FPGA)		+= vicharak/
+
 # Core FPGA Manager Framework
 obj-$(CONFIG_FPGA)			+= fpga-mgr.o
 
