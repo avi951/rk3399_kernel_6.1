@@ -1,0 +1,8 @@
+menu "Vicharak Configurattion Support FPGA"
+
+config VICHARAK_FPGA_CONFIGURE
+	bool "Vicharak read write char devices"
+	help
+	  Read/Write to Vicharak FPGA
+
+endmenu
