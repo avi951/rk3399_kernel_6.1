@@ -12,6 +12,9 @@
 #include <asm/uaccess.h>
 #include <linux/gpio.h> 
 #define TINY_TTY_MINORS 1
+
+extern ssize_t create_fpga_frame(const char *, size_t);
+
 static struct tty_driver *fpga_tty_driver;
 dev_t fpga_device_num;
 static struct tty_port port;
@@ -49,11 +52,13 @@ static void fpga_tty_close(struct tty_struct *tty, struct file *file){
 }
 
 static int fpga_tty_write(struct tty_struct *tty, const unsigned char *buffer, int count){
-	int i;
-	for(i = 0; i<count; i++){
-		tty_insert_flip_char(tty->port, buffer[i], TTY_NORMAL);
-		tty_flip_buffer_push(tty->port);
-	}
+	char* data_buf = kmalloc(count + 1, GFP_KERNEL);
+
+	data_buf[0] = 2;
+	memcpy(data_buf + 1, buffer, count);
+	create_fpga_frame(data_buf, count + 1);
+
+	kfree(data_buf);
 	return count;
 } 
 
