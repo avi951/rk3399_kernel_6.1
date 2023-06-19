@@ -44,22 +44,7 @@ char get_mask(uint8_t rem) {
 	return mask;
 }
 
-static ssize_t buffer_read(struct file *filp, char __user *data, size_t count,
-		loff_t *f_ops) {
-	int ret = 0, i;
-
-	for (i = 0; i < count; i++) {
-		ret = dequeue_character(&queue_tx, &data[i]);
-		if(!ret) {
-			data[i] = 0;
-		}
-	}
-
-	return count;
-}
-
-static ssize_t buffer_write(struct file *filp, const char __user *data, size_t count,
-		loff_t *f_ops) {
+ssize_t create_fpga_frame(const char* data, size_t count) {
 	int i;
 	if (count > 1) {
 		char* data_buf = kmalloc(count + 17, GFP_KERNEL); 
@@ -108,6 +93,26 @@ static ssize_t buffer_write(struct file *filp, const char __user *data, size_t c
 
 err:
 	return -EFAULT;
+}
+EXPORT_SYMBOL(create_fpga_frame);
+
+static ssize_t buffer_read(struct file *filp, char __user *data, size_t count,
+		loff_t *f_ops) {
+	int ret = 0, i;
+
+	for (i = 0; i < count; i++) {
+		ret = dequeue_character(&queue_tx, &data[i]);
+		if(!ret) {
+			data[i] = 0;
+		}
+	}
+
+	return count;
+}
+
+static ssize_t buffer_write(struct file *filp, const char __user *data, size_t count,
+		loff_t *f_ops) {
+	return create_fpga_frame(data, count);
 }
 
 static int buffer_open(struct inode *inode, struct file *filp) {
