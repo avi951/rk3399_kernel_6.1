@@ -37,7 +37,7 @@ char get_mask(uint8_t rem) {
 			mask = 0b11111;
 			break;
 		default:
-			mask = 0b1;
+			mask = 0b111111;
 			break;
 	}
 
