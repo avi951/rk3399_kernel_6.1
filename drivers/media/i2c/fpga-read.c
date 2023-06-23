@@ -66,69 +66,6 @@ struct fpga_mode {
 	const struct fpga_reg *reg_list;
 };
 
-/* MCLK:24MHz  1920x1080  30fps   MIPI LANE2 */
-static const struct fpga_reg fpga_init_tab_1920_1080_30fps[] = {
-	{0x30EB, 0x05},
-	{0x30EB, 0x0C},
-	{0x300A, 0xFF},
-	{0x300B, 0xFF},
-	{0x30EB, 0x05},
-	{0x30EB, 0x09},
-	{0x0114, 0x01},
-	{0x0128, 0x00},
-	{0x012A, 0x18},
-	{0x012B, 0x00},
-	{0x0160, 0x06},
-	{0x0161, 0xE6},
-	{0x0162, 0x0D},
-	{0x0163, 0x78},
-	{0x0164, 0x02},
-	{0x0165, 0xA8},
-	{0x0166, 0x0A},
-	{0x0167, 0x27},
-	{0x0168, 0x02},
-	{0x0169, 0xB4},
-	{0x016A, 0x06},
-	{0x016B, 0xEB},
-	{0x016C, 0x07},
-	{0x016D, 0x80},
-	{0x016E, 0x04},
-	{0x016F, 0x38},
-	{0x0170, 0x01},
-	{0x0171, 0x01},
-	{0x0174, 0x00},
-	{0x0175, 0x00},
-	{0x018C, 0x0A},
-	{0x018D, 0x0A},
-	{0x0301, 0x05},
-	{0x0303, 0x01},
-	{0x0304, 0x03},
-	{0x0305, 0x03},
-	{0x0306, 0x00},
-	{0x0307, 0x39},
-	{0x0309, 0x0A},
-	{0x030B, 0x01},
-	{0x030C, 0x00},
-	{0x030D, 0x72},
-	{0x455E, 0x00},
-	{0x471E, 0x4B},
-	{0x4767, 0x0F},
-	{0x4750, 0x14},
-	{0x4540, 0x00},
-	{0x47B4, 0x14},
-	{FPGA_TABLE_END, 0x00}
-};
-
-static const struct fpga_reg start[] = {
-	{0x0100, 0x01},		/* mode select streaming on */
-	{FPGA_TABLE_END, 0x00}
-};
-
-static const struct fpga_reg stop[] = {
-	{0x0100, 0x00},		/* mode select streaming off */
-	{FPGA_TABLE_END, 0x00}
-};
-
 enum {
 	TEST_PATTERN_DISABLED,
 	TEST_PATTERN_SOLID_BLACK,
@@ -146,25 +83,6 @@ enum {
 	TEST_PATTERN_PN31,
 	TEST_PATTERN_MAX
 };
-
-static const char *const tp_qmenu[] = {
-	"Disabled",
-	"Solid Black",
-	"Solid White",
-	"Solid Red",
-	"Solid Green",
-	"Solid Blue",
-	"Color Bar",
-	"Fade to Grey Color Bar",
-	"PN9",
-	"16 Split Color Bar",
-	"16 Split Inverted Color Bar",
-	"Column Counter",
-	"Inverted Column Counter",
-	"PN31",
-};
-
-#define SIZEOF_I2C_TRANSBUF 32
 
 struct fpga {
 	struct v4l2_subdev subdev;
@@ -205,7 +123,6 @@ static const struct fpga_mode supported_modes[] = {
 		},
 		.hts_def = 640+180,//+88+128+40,
 		.vts_def = 480+90,//+23+1+128,
-		.reg_list = fpga_init_tab_1920_1080_30fps,
 	},
 };
 
@@ -412,7 +329,7 @@ static int fpga_enum_mbus_code(struct v4l2_subdev *sd,
 {
 	if (code->index != 0)
 		return -EINVAL;
-	code->code = MEDIA_BUS_FMT_SBGGR10_1X10;
+	code->code = MEDIA_BUS_FMT_RGB888_1X24;
 
 	return 0;
 }
@@ -568,7 +485,7 @@ static int fpga_enum_frame_interval(struct v4l2_subdev *sd,
 	if (fie->index >= priv->cfg_num)
 		return -EINVAL;
 
-	if (fie->code != MEDIA_BUS_FMT_SRGGB10_1X10)
+	if (fie->code != MEDIA_BUS_FMT_RGB888_1X24)
 		return -EINVAL;
 
 	fie->width = supported_modes[fie->index].width;
