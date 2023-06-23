@@ -11,16 +11,50 @@
 #include <linux/interrupt.h>
 #include <asm/uaccess.h>
 #include <linux/gpio.h> 
-#define TINY_TTY_MINORS 1
+#include <net/sock.h>
+#include <linux/netlink.h>
+#include <linux/skbuff.h>
 
-extern ssize_t create_fpga_frame(const char *, size_t);
+#define TINY_TTY_MINORS 1
+#define MY_NETLINK 30
+
+// extern ssize_t create_fpga_frame(const char *, size_t);
 
 static struct tty_driver *fpga_tty_driver;
 dev_t fpga_device_num;
 static struct tty_port port;
 struct tty_struct *tty_fpga;
+struct sock *nl_sk = NULL;
+static int pid;
 
-void fpga_get_data(const unsigned char *buffer, int count){
+static void recv_msg_usr(struct sk_buff *skb)
+{
+	struct nlmsghdr *nlhead;
+
+	nlhead = (struct nlmsghdr*) skb->data;
+	pid = nlhead->nlmsg_pid;
+}
+
+static int send_msg_usr(const char *data, size_t len)
+{
+	struct nlmsghdr *nlhead;
+
+	struct sk_buff *skb_out = nlmsg_new(len, 0);
+	if (!skb_out) {
+		printk(KERN_ERR "Failed to allocate SKB\n");
+		return -1;
+	}
+
+	nlhead = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, len, 0);
+	NETLINK_CB(skb_out).dst_group = 0;
+
+	memcpy(nlmsg_data(nlhead), data, len);
+
+	return nlmsg_unicast(nl_sk, skb_out, pid);
+} 
+
+void fpga_get_data(const unsigned char *buffer, int count)
+{
 	int i;
 	if(tty_fpga != NULL && tty_fpga != NULL){
 		for(i = 0; i<count; i++){
@@ -56,7 +90,8 @@ static int fpga_tty_write(struct tty_struct *tty, const unsigned char *buffer, i
 
 	data_buf[0] = 2;
 	memcpy(data_buf + 1, buffer, count);
-	create_fpga_frame(data_buf, count + 1);
+	// create_fpga_frame(data_buf, count + 1);
+	send_msg_usr(data_buf, count + 1);
 
 	kfree(data_buf);
 	return count;
@@ -79,6 +114,16 @@ static const struct tty_operations serial_ops = {
 
 static int fpga_tty_probe(void){
 	int retval;
+	struct netlink_kernel_cfg cfg = {
+		.input = recv_msg_usr,
+	};
+
+	nl_sk = netlink_kernel_create(&init_net, MY_NETLINK, &cfg);
+	if (!nl_sk) {
+		printk(KERN_ALERT "Netlink socket creation failed!\n");
+		return -10;
+	}
+
 	tty_port_init(&port);
 	/* allocate the tty driver */
 	fpga_tty_driver = tty_alloc_driver(1, TTY_DRIVER_REAL_RAW);
@@ -114,6 +159,8 @@ static void fpga_tty_remove(void){
 	tty_unregister_driver(fpga_tty_driver);
 
 	tty_driver_kref_put(fpga_tty_driver);
+
+	netlink_kernel_release(nl_sk);
 }
 
 static int __init fpga_tiny_init(void){
