@@ -29,10 +29,19 @@ static int pid;
 
 static void recv_msg_usr(struct sk_buff *skb)
 {
-	struct nlmsghdr *nlhead;
-
-	nlhead = (struct nlmsghdr*) skb->data;
+    	int i;
+	struct nlmsghdr *nlhead = (struct nlmsghdr*) skb->data;
+	int lenn = nlmsg_len(nlhead);
+	unsigned char* data = (unsigned char*) nlmsg_data(nlhead);
 	pid = nlhead->nlmsg_pid;
+	
+	if(tty_fpga != NULL){
+		for(i = 0; i<lenn; i++){
+			tty_insert_flip_char(tty_fpga->port, data[i], TTY_NORMAL);
+			tty_flip_buffer_push(tty_fpga->port);
+		}
+	}
+	
 }
 
 static int send_msg_usr(const char *data, size_t len)
@@ -56,7 +65,7 @@ static int send_msg_usr(const char *data, size_t len)
 void fpga_get_data(const unsigned char *buffer, int count)
 {
 	int i;
-	if(tty_fpga != NULL && tty_fpga != NULL){
+	if(tty_fpga != NULL){
 		for(i = 0; i<count; i++){
 			tty_insert_flip_char(tty_fpga->port, buffer[i], TTY_NORMAL);
 			tty_flip_buffer_push(tty_fpga->port);
