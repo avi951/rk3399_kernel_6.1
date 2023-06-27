@@ -46,7 +46,11 @@
 #define DBG(x...)
 #endif
 
+#if 0
 #define LOG(x...)   printk(KERN_INFO "[BT_RFKILL]: "x)
+#else
+#define LOG(x...)
+#endif
 
 #define BT_WAKEUP_TIMEOUT           10000
 #define BT_IRQ_WAKELOCK_TIMEOUT     10*1000
