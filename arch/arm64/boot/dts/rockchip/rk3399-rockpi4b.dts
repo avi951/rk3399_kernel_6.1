@@ -746,6 +746,16 @@
 		enable-gpios = <&gpio4 30 GPIO_ACTIVE_LOW>;
 		#gpio-cells = <2>;
 	};
+
+	tinker_mcu: tinker_mcu@45 {
+		compatible = "tinker_mcu";
+		reg = <0x45>;
+	};
+
+	tinker_mcu_ili9881c: tinker_mcu_ili9881c@36 {
+		compatible = "tinker_mcu_ili9881c";
+		reg = <0x36>;
+	};
 };
 
 &i2c4 {
@@ -1146,15 +1156,45 @@
 };
 
 &dsi {
-	status = "disabled";
+	status = "okay";
+	panel@0 {
+		compatible ="asus-dsi-panel";
+		reg = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				panel_in_dsi: endpoint {
+					remote-endpoint = <&dsi_out_panel>;
+				};
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@1 {
+			reg = <1>;
+
+			dsi_out_panel: endpoint {
+				remote-endpoint = <&panel_in_dsi>;
+			};
+		};
+	};
 };
 
 &vopb_out_dsi {
-  status = "disabled";
+  	status = "disabled";
 };
 
 &vopl_out_dsi {
-  status = "disabled";
+  	status = "okay";
 };
 
 &dsi1 {
@@ -1629,11 +1669,15 @@
 
 	route {
 		route_hdmi: route-hdmi {
-			status = "okay";
+			status = "disabled";
 		};
 
 		route_dp: route-dp {
 			status = "disabled";
+		};
+
+		route_dsi: route-dsi {
+			status = "okay";
 		};
 
 		route_edp: route-edp {
