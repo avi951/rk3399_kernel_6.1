@@ -43,10 +43,7 @@ static int asus_dsi_probe(struct mipi_dsi_device *dsi)
 	np = dsi->dev.of_node;
 	dsi_id = of_alias_get_id(np->parent, "dsi");
 	printk("asus_dsi_probe dsi=%d+\n", dsi_id);
-	if (tinker_mcu_is_connected(dsi_id))
-		ret = tc358762_dsi_probe(dsi);
-	else
-		ret = ili9881c_dsi_probe(dsi);
+	ret = ili9881c_dsi_probe(dsi);
 	printk("asus_dsi_probe -\n");
 
 	return ret;
@@ -61,10 +58,7 @@ static int asus_dsi_remove(struct mipi_dsi_device *dsi)
 	np = dsi->dev.of_node;
 	dsi_id = of_alias_get_id(np->parent,"dsi");
 	printk("asus_dsi_remove dsi_id=%d+\n",dsi_id);
-	if (tinker_mcu_is_connected(dsi_id))
-		ret = tc358762_dsi_remove(dsi);
-	else
-		ret = ili9881c_dsi_remove(dsi);
+	ret = ili9881c_dsi_remove(dsi);
 	printk("asus_dsi_remove-\n");
 
 	return ret;
@@ -78,10 +72,7 @@ void asus_dsi_shutdown(struct mipi_dsi_device *dsi)
 	np = dsi->dev.of_node;
 	dsi_id= of_alias_get_id(np->parent,"dsi");
 	printk("asus_dsi_shutdown dsi_id=%d +\n", dsi_id);
-	if (tinker_mcu_is_connected(dsi_id))
-		tc358762_dsi_shutdown(dsi);
-	else
-		ili9881c_dsi_shutdown(dsi);
+	ili9881c_dsi_shutdown(dsi);
 	printk("asus_dsi_shutdown-\n");
 
 	return;
