@@ -885,7 +885,7 @@
 };
 
 &gpu {
-	status = "okay";
+	status = "disabled";
 	mali-supply = <&vdd_gpu>;
 };
 
@@ -1246,12 +1246,6 @@
 		};
 	};*/
 
-	/*lcd_panel {
-		edp_panel_en: edp-panel-en {
-			rockchip,pins = <4 RK_PD6 RK_FUNC_GPIO &pcfg_output_high>;
-		};
-	};*/
-
 	leds-gpio {
 		led0: led-0 {
 			rockchip,pins = <3 RK_PD6 RK_FUNC_GPIO &pcfg_pull_none>;
@@ -1558,13 +1552,13 @@
 };
 
 &vpu {
-	status = "okay";
+	status = "disabled";
 	/* 0 means ion, 1 means drm */
 	//allocator = <0>;
 };
 
 &rkvdec {
-	status = "okay";
+	status = "disabled";
 	/* 0 means ion, 1 means drm */
 	//allocator = <0>;
 };
@@ -1645,11 +1639,6 @@
                 opp-microvolt = <900000>;
                 status = "disabled";
         };
-};
-
-&gpu {
-        mali-supply = <&vdd_gpu>;
-        status = "okay";
 };
 
 &iep {
