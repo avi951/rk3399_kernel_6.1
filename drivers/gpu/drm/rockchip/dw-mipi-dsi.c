@@ -1613,26 +1613,12 @@ encoder_cleanup:
 	return ret;
 }
 
-#if defined(CONFIG_TINKER_MCU)
-extern int tinker_mcu_is_connected(int dsi_id);
-extern int tinker_mcu_ili9881c_is_connected(int dsi_id);
-#endif
-
 static int dw_mipi_dsi_bind(struct device *dev, struct device *master,
 			     void *data)
 {
 	struct drm_device *drm = data;
 	struct dw_mipi_dsi *dsi = dev_get_drvdata(dev);
 	int ret;
-
-#if defined(CONFIG_TINKER_MCU)
-	if(!tinker_mcu_is_connected(dsi->id) && !tinker_mcu_ili9881c_is_connected(dsi->id)) {
-		pr_info("dsi-%d panel isn't connected\n", dsi->id);
-		return 0;
-	} else {
-		pr_info("dsi-%d panel is connected\n", dsi->id);
-	}
-#endif
 
 	ret = dw_mipi_dsi_dual_channel_probe(dsi);
 	if (ret)

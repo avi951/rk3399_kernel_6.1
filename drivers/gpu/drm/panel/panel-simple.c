@@ -1391,31 +1391,6 @@ static const struct panel_desc boe_nt156whm_n42 = {
 	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
 };
 
-static const struct drm_display_mode vaaman_board_mode = {
-	.clock = 297000,
-	.hdisplay = 1920,
-	.hsync_start = 1920 + 88,
-	.hsync_end = 1920 + 88 + 44,
-	.htotal = 1920 + 88 + 44 + 148,
-	.vdisplay = 1080,
-	.vsync_start = 1080 + 4,
-	.vsync_end = 1080 + 4 + 5,
-	.vtotal = 1080 + 4 + 5 + 36,
-	.vrefresh = 120,
-	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
-};
-
-static const struct panel_desc vaaman_board = {
-	.modes = &vaaman_board_mode,
-	.num_modes = 1,
-	.bpc = 8,
-	.size = {
-		.width = 576,
-		.height = 324,
-	},
-	.bus_format = MEDIA_BUS_FMT_RGB888_1X24,
-};
-
 static const struct drm_display_mode chunghwa_claa070wp03xg_mode = {
 	.clock = 67000,
 	.hdisplay = 800,
@@ -2197,9 +2172,6 @@ static const struct of_device_id platform_of_match[] = {
 	}, {
 		.compatible = "boe,nt156whm-n42",
 		.data = &boe_nt156whm_n42,
-	}, {
-		.compatible = "vaaman,edp-bridge",
-		.data = &vaaman_board,
 	}, {
 		.compatible = "chunghwa,claa070wp03xg",
 		.data = &chunghwa_claa070wp03xg,
