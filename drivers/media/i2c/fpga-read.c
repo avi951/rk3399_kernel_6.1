@@ -114,7 +114,7 @@ struct fpga {
 };
 
 static const struct fpga_mode supported_modes[] = {
-	/*{
+	{
 		.width =  800, //H
 		.height = 600, //V
 		.max_fps = {
@@ -123,7 +123,7 @@ static const struct fpga_mode supported_modes[] = {
 		},
 		.hts_def = 800+256,//+88+128+40,
 		.vts_def = 600+28,//+23+1+128,
-	},*/
+	},
 	{
 		.width =  640, //H
 		.height = 480, //V

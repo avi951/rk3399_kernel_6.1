@@ -18,7 +18,7 @@
 #include <linux/pm.h>
 
 #include <drm/drm_crtc.h>
-#include <drm/drm_device.h>
+#include <drm/drmP.h>
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_panel.h>
 
@@ -29,7 +29,7 @@ struct ws_panel {
 	struct mipi_dsi_device *dsi;
 	struct i2c_client *i2c;
 	const struct drm_display_mode *mode;
-	enum drm_panel_orientation orientation;
+	struct backlight_device *backlight;
 };
 
 /* 2.8inch 480x640
@@ -180,11 +180,11 @@ static int ws_panel_enable(struct drm_panel *panel)
 	return 0;
 }
 
-static int ws_panel_get_modes(struct drm_panel *panel,
-			      struct drm_connector *connector)
+static int ws_panel_get_modes(struct drm_panel *panel)
 {
 	static const u32 bus_format = MEDIA_BUS_FMT_RGB888_1X24;
 	struct ws_panel *ts = panel_to_ts(panel);
+	struct drm_connector *connector = panel->connector;
 	struct drm_display_mode *mode;
 
 	mode = drm_mode_duplicate(connector->dev, ts->mode);
@@ -211,16 +211,8 @@ static int ws_panel_get_modes(struct drm_panel *panel,
 	 * TODO: Remove once all drm drivers call
 	 * drm_connector_set_orientation_from_panel()
 	 */
-	drm_connector_set_panel_orientation(connector, ts->orientation);
 
 	return 1;
-}
-
-static enum drm_panel_orientation ws_panel_get_orientation(struct drm_panel *panel)
-{
-	struct ws_panel *ts = panel_to_ts(panel);
-
-	return ts->orientation;
 }
 
 static const struct drm_panel_funcs ws_panel_funcs = {
@@ -229,14 +221,13 @@ static const struct drm_panel_funcs ws_panel_funcs = {
 	.prepare = ws_panel_prepare,
 	.enable = ws_panel_enable,
 	.get_modes = ws_panel_get_modes,
-	.get_orientation = ws_panel_get_orientation,
 };
 
 static int ws_panel_bl_update_status(struct backlight_device *bl)
 {
 	struct ws_panel *ts = bl_get_data(bl);
 
-	ws_panel_i2c_write(ts, 0xab, 0xff - backlight_get_brightness(bl));
+	ws_panel_i2c_write(ts, 0xab, 0xff - bl->props.brightness);
 	ws_panel_i2c_write(ts, 0xaa, 0x01);
 
 	return 0;
@@ -290,12 +281,6 @@ static int ws_panel_probe(struct i2c_client *i2c,
 	ws_panel_i2c_write(ts, 0xc2, 0x01);
 	ws_panel_i2c_write(ts, 0xac, 0x01);
 
-	ret = of_drm_get_panel_orientation(dev->of_node, &ts->orientation);
-	if (ret) {
-		dev_err(dev, "%pOF: failed to get orientation %d\n", dev->of_node, ret);
-		return ret;
-	}
-
 	/* Look up the DSI host.  It needs to probe before we do. */
 	endpoint = of_graph_get_next_endpoint(dev->of_node, NULL);
 	if (!endpoint)
@@ -318,19 +303,21 @@ static int ws_panel_probe(struct i2c_client *i2c,
 
 	of_node_put(endpoint);
 
-	ts->dsi = devm_mipi_dsi_device_register_full(dev, host, &info);
+	ts->dsi = mipi_dsi_device_register_full(host, &info);
 	if (IS_ERR(ts->dsi)) {
 		dev_err(dev, "DSI device registration failed: %ld\n",
 			PTR_ERR(ts->dsi));
 		return PTR_ERR(ts->dsi);
 	}
 
-	drm_panel_init(&ts->base, dev, &ws_panel_funcs,
-		       DRM_MODE_CONNECTOR_DSI);
+	drm_panel_init(&ts->base);
+	ts->base.dev = dev;
+	ts->base.funcs = &ws_panel_funcs;
+	// ts->base.connector = DRM_MODE_CONNECTOR_DSI;
 
-	ts->base.backlight = ws_panel_create_backlight(ts);
-	if (IS_ERR(ts->base.backlight)) {
-		ret = PTR_ERR(ts->base.backlight);
+	ts->backlight = ws_panel_create_backlight(ts);
+	if (IS_ERR(ts->backlight)) {
+		ret = PTR_ERR(ts->backlight);
 		dev_err(dev, "Failed to create backlight: %d\n", ret);
 		return ret;
 	}
@@ -346,7 +333,7 @@ static int ws_panel_probe(struct i2c_client *i2c,
 	ts->dsi->format = MIPI_DSI_FMT_RGB888;
 	ts->dsi->lanes = 2;
 
-	ret = devm_mipi_dsi_attach(dev, ts->dsi);
+	ret = mipi_dsi_attach(ts->dsi);
 
 	if (ret)
 		dev_err(dev, "failed to attach dsi to host: %d\n", ret);
@@ -358,11 +345,13 @@ error:
 	return -ENODEV;
 }
 
-static void ws_panel_remove(struct i2c_client *i2c)
+static int ws_panel_remove(struct i2c_client *i2c)
 {
 	struct ws_panel *ts = i2c_get_clientdata(i2c);
 
 	drm_panel_remove(&ts->base);
+
+	return 0;
 }
 
 static const struct of_device_id ws_panel_of_ids[] = {
