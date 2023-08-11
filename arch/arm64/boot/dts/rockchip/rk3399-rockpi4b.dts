@@ -1466,7 +1466,7 @@
 
 		isp0_mipi_in: endpoint@0 {
 			reg = <0>;
-			remote-endpoint = <&dphy_tx0_out>;
+			remote-endpoint = <&dphy_rx0_out>;
 		};
 	};
 };
@@ -1508,7 +1508,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			dphy_tx0_out: endpoint@0 {
+			dphy_rx0_out: endpoint@0 {
 				reg = <0>;
 				remote-endpoint = <&isp0_mipi_in>;
 			};
