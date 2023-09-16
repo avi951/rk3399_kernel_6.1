@@ -49,7 +49,7 @@
 #define FPGA_NAME			"EFINIX"
 
 static const s64 link_freq_menu_items[] = {
-	600000000
+	1100000000
 };
 
 struct fpga_reg {
@@ -115,6 +115,16 @@ struct fpga {
 
 static const struct fpga_mode supported_modes[] = {
 	{
+		.width =  1920, //H
+		.height = 1080, //V
+		.max_fps = {
+			.numerator = 10000,
+			.denominator = 600000,
+		},
+		.hts_def = 1920+280,//+88+128+40,
+		.vts_def = 1080+45,//+23+1+128,
+	},
+	{
 		.width =  800, //H
 		.height = 600, //V
 		.max_fps = {
@@ -123,6 +133,16 @@ static const struct fpga_mode supported_modes[] = {
 		},
 		.hts_def = 800+256,//+88+128+40,
 		.vts_def = 600+28,//+23+1+128,
+	},
+	{
+		.width =  1280, //H
+		.height = 1024, //V
+		.max_fps = {
+			.numerator = 10000,
+			.denominator = 600000,
+		},
+		.hts_def = 1280+408,//+88+128+40,
+		.vts_def = 1024+42,//+23+1+128,
 	},
 	{
 		.width =  640, //H
