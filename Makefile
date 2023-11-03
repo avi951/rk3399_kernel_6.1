@@ -788,6 +788,20 @@ KBUILD_CFLAGS += $(call cc-disable-warning, unused-const-variable)
 # These result in bogus false positives
 KBUILD_CFLAGS += $(call cc-disable-warning, dangling-pointer)
 
+KBUILD_CFLAGS += $(call cc-disable-warning, array-compare)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, address)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, misleading-indentation)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, stringop-overread)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, enum-int-mismatch)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, builtin-declaration-mismatch)
+
+KBUILD_CFLAGS += $(call cc-disable-warning, sizeof-array-div)
+
 ifdef CONFIG_FRAME_POINTER
 KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
 else
