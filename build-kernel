@@ -71,41 +71,10 @@ function cleanup() {
 	fi
 }
 
-# Disable GCC kernel compilation
-GCC_COMPILE=0
-CLANG_COMPILE=1
-
-if [ "$GCC_COMPILE" -eq 1 ]; then
-	ARGS="ARCH=arm64 \
-		O=${OUT_DIR} \
-		CROSS_COMPILE=aarch64-linux-gnu- \
-		-j$(nproc --all)"
-fi
-
-if [ "$CLANG_COMPILE" -eq 1 ]; then
-	if [ ! -d $(pwd)/../clang ]; then
-		git clone \
-			https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-6364210 \
-			-b 10.0 \
-			$(pwd)/../clang
-	fi
-
-	export PATH=$(pwd)/../clang/bin:$PATH
-
-	if [ -f $(which ccache) ]; then
-		ARGS="ARCH=arm64 \
-			O=${OUT_DIR} \
-			CLANG_TRIPLE=aarch64-linux-gnu- \
-			CROSS_COMPILE=aarch64-linux-gnu- \
-			-j$(nproc --all)"
-	else
-		ARGS="ARCH=arm64 \
-						O=${OUT_DIR} \
-						CLANG_TRIPLE=aarch64-linux-gnu- \
-						CROSS_COMPILE=aarch64-linux-gnu- \
-						-j$(nproc --all)"
-	fi
-fi
+ARGS="ARCH=arm64 \
+O=${OUT_DIR} \
+CROSS_COMPILE=aarch64-linux-gnu- \
+-j$(nproc --all)"
 
 if [[ "$@" =~ "debian"* ]]; then
 	echo -e "###### USING DEBIAN EXTLINUX CONFIG #####"
@@ -127,21 +96,13 @@ cleanup
 # Make defconfig
 make -j$(nproc --all) ${ARGS} rockchip_linux_defconfig
 
-# Make kernel image
-if [ -f $(which bear) ]; then
-	echo "Using bear to generate compile_commands.json"
-	if [ -f $(which ccache) ]; then
-		if [ "$GCC_COMPILE" -eq 1 ]; then
-			bear -- make ${ARGS} CC="ccache gcc"
-		elif [ "$CLANG_COMPILE" -eq 1 ]; then
-			bear -- make ${ARGS} CC="ccache clang"
-		fi
-	else
-		bear -- make ${ARGS}
-	fi
+# Make kernel Image
+if [ -f $(which ccache) ]; then
+	CROSS_COMPILE="aarch64-linux-gnu-"
+	make -j$(nproc --all) ${ARGS} CC="ccache ${CROSS_COMPILE}gcc" 2>&1 | tee build.log
 else
-	echo "Using make to compile"
-	make ${ARGS}
+	make -j$(nproc --all) ${ARGS} 2>&1 | tee build.log
+
 fi
 
 # Create boot image
