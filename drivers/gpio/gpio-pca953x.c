@@ -737,13 +737,8 @@ static int pca953x_probe(struct i2c_client *client,
 	i2c_set_clientdata(client, chip);
 
 	for (d = 0; d < chip->gpio_chip.ngpio; d++) {
-		if (d == 0) {
-			dev_info(&client->dev, "setting value 1 for P%d\n", d);
-			pca953x_gpio_set_value(&chip->gpio_chip,d,1);
-			continue;
-		}
-		dev_info(&client->dev, "setting value to 0 for P%d\n", d);
-		pca953x_gpio_set_value(&chip->gpio_chip,d,0);
+		dev_info(&client->dev, "setting value to 1 for P%d\n", d);
+		pca953x_gpio_set_value(&chip->gpio_chip, d, 1);
 	}
 
 	return 0;
