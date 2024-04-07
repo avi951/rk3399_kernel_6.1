@@ -110,7 +110,6 @@ pack_image
 
 if [ -f ${FILENAME} ]; then
 	echo "Kernel compiled successfully!"
-	sudo cp -vr ${FILENAME} /home/vegg/rk3399_kernel/out/
 else
 	echo "Kernel build failed!"
 fi
